@@ -1,0 +1,19 @@
+FailAt 21
+MakeDir RAM:probe
+Copy SHARED:private/#? RAM:probe QUIET
+C:xpk -u -s RAM:probe/p01.xpk >SHARED:outputs/p01.log
+Echo "rc=$RC" >>SHARED:outputs/p01.log
+C:xpk -u -s RAM:probe/p02.xpk >SHARED:outputs/p02.log
+Echo "rc=$RC" >>SHARED:outputs/p02.log
+C:xpk -u -s RAM:probe/p03.xpk >SHARED:outputs/p03.log
+Echo "rc=$RC" >>SHARED:outputs/p03.log
+C:xpk -u -s RAM:probe/p04.xpk >SHARED:outputs/p04.log
+Echo "rc=$RC" >>SHARED:outputs/p04.log
+C:xpk -u -s RAM:probe/p05.xpk >SHARED:outputs/p05.log
+Echo "rc=$RC" >>SHARED:outputs/p05.log
+Copy RAM:probe/p01 SHARED:outputs/p01.out QUIET
+Copy RAM:probe/p02 SHARED:outputs/p02.out QUIET
+Copy RAM:probe/p03 SHARED:outputs/p03.out QUIET
+Copy RAM:probe/p04 SHARED:outputs/p04.out QUIET
+Copy RAM:probe/p05 SHARED:outputs/p05.out QUIET
+Echo "probe-complete" >SHARED:outputs/probe.done

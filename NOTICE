@@ -1,0 +1,10 @@
+Parts of the XPK codec implementations are derived from Ancient:
+
+    Copyright (c) 2017-2025, Teemu Suutari
+    https://github.com/temisu/ancient
+
+Ancient is distributed under the BSD 2-Clause License. Its copyright and
+license terms are retained in the relevant source modules.
+
+Historical XFH and XPK source code is used as format documentation and test
+oracle material only. It is not included in this distribution.

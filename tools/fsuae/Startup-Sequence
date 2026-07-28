@@ -1,0 +1,9 @@
+FailAt 21
+Assign C: ORACLE:C ADD
+Assign LIBS: ORACLE:Libs ADD
+Assign LIBS: ORACLE:Libs/compressors ADD
+Assign T: RAM:
+Assign ENV: RAM:
+Assign ENVARC: RAM:
+Execute SHARED:control/oracle-stage
+EndCLI

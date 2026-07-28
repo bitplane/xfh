@@ -1,0 +1,22 @@
+.venv/
+__pycache__/
+*.py[cod]
+.coverage
+.hypothesis/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+htmlcov/
+site/
+*.egg-info/
+
+# Personal recovery material is never committed.
+samples/
+private-corpus/
+private-corpus.json
+
+# Fixture generator work areas and proprietary Amiga material.
+.fixture-work/
+*.rom
+*.adf
