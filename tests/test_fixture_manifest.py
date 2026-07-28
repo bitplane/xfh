@@ -6,7 +6,6 @@ import pytest
 
 import xfh
 from tools.verify_fixture_manifest import verify_manifest
-from xfh.errors import UnsupportedCodecError
 
 
 def _artifact(root: Path, name: str, content: bytes) -> dict[str, object]:
@@ -79,8 +78,10 @@ def test_public_oracle_fixtures() -> None:
     for fixture in manifest["fixtures"]:
         packed = bytes.fromhex((root / fixture["packed"]["path"]).read_text())
         expected = bytes.fromhex((root / fixture["unpacked"]["path"]).read_text())
-        if fixture["codec"] in {"RAKE", "SHRI"}:
-            with pytest.raises(UnsupportedCodecError):
-                xfh.decompress(packed)
-        else:
-            assert xfh.decompress(packed) == expected
+        assert xfh.decompress(packed) == expected
+
+
+def test_shri_continuation_chunk_oracle() -> None:
+    root = Path(__file__).parent / "fixtures" / "oracle"
+    packed = bytes.fromhex((root / "shri100-repeat64k.hex").read_text())
+    assert xfh.decompress(packed) == bytes(range(64)) * 1024

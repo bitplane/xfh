@@ -26,9 +26,8 @@ range boundary/default on deterministic pattern and size vectors:
 - zero round-trip mismatches among completed non-empty cases.
 
 All 1,026 emitted containers begin with `XPKF`. Small representative fixtures
-for all six codecs are committed as reviewable hexadecimal files. The NONE,
-NUKE, FAST, and HUFF fixtures validate the current Python implementation;
-RAKE and SHRI are retained as the next decoder acceptance vectors.
+for all six codecs are committed as reviewable hexadecimal files and validate
+the current pure-Python implementations.
 
 The recovered private wrapper beginning `01 80 63 68 05 61 01 0a` was not
 recognized as packed data by the original master library. That result rules

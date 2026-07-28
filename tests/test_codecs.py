@@ -1,4 +1,7 @@
+import pytest
+
 from xfh.codecs import decode, supported_codecs
+from xfh.errors import CorruptDataError
 
 
 def test_fast_literal_stream() -> None:
@@ -18,4 +21,19 @@ def test_huff_single_symbol_stream() -> None:
 
 
 def test_initial_codec_set() -> None:
-    assert {"NONE", "NUKE", "FAST", "HUFF"} <= supported_codecs()
+    assert {"NONE", "NUKE", "FAST", "RAKE", "HUFF", "SHRI"} <= supported_codecs()
+
+
+@pytest.mark.parametrize(
+    ("codec", "payload"),
+    [
+        ("RAKE", b""),
+        ("RAKE", b"\0" * 8),
+        ("SHRI", b""),
+        ("SHRI", b"\2\0\0\1" + b"\0" * 4),
+        ("SHRI", b"\1\0\0\2" + b"\0" * 4),
+    ],
+)
+def test_new_codecs_reject_malformed_streams(codec: str, payload: bytes) -> None:
+    with pytest.raises(CorruptDataError):
+        decode(codec, payload, 1)

@@ -34,11 +34,21 @@ def _decompress_parsed(parsed: ParsedFile) -> bytes:
     if parsed.info.flags & 2:
         raise PasswordRequiredError("password-protected XPK streams are not implemented")
     output = bytearray()
+    shri_state = None
     for chunk in parsed.chunks:
         if chunk.info.type == 15:
             continue
         if chunk.info.type == 0:
             decoded = chunk.payload
+        elif parsed.info.codec == "SHRI":
+            from xfh.codecs.shri import decompress_shri_chunk
+
+            decoded, shri_state = decompress_shri_chunk(
+                chunk.payload,
+                chunk.info.unpacked_size,
+                bytes(output),
+                shri_state,
+            )
         else:
             decoded = decode(
                 parsed.info.codec,
@@ -84,6 +94,7 @@ def salvage(
     except XfhError as error:
         return RecoveryResult(b"", False, (RecoveryIssue(0, str(error)),))
     output = bytearray()
+    shri_state = None
     issues: list[RecoveryIssue] = []
     for chunk in parsed.chunks:
         if chunk.info.type == 15:
@@ -91,6 +102,15 @@ def salvage(
         try:
             if chunk.info.type == 0:
                 decoded = chunk.payload
+            elif parsed.info.codec == "SHRI":
+                from xfh.codecs.shri import decompress_shri_chunk
+
+                decoded, shri_state = decompress_shri_chunk(
+                    chunk.payload,
+                    chunk.info.unpacked_size,
+                    bytes(output),
+                    shri_state,
+                )
             else:
                 decoded = decode(
                     parsed.info.codec,
