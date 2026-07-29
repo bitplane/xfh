@@ -22,9 +22,7 @@ across repositories.
 Run the repository checks from a clean checkout:
 
 ```console
-make coverage
-make lint
-make dist
+make all
 ```
 
 Then verify the built artifacts rather than the source checkout:

@@ -9,6 +9,7 @@ build/
 dist/
 htmlcov/
 site/
+docs/pydoc/
 *.egg-info/
 
 # Personal recovery material is never committed.

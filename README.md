@@ -93,8 +93,16 @@ make dev
 make test
 make coverage
 make lint
+make docs
 make dist
 ```
+
+`make all` runs the complete local validation and build. `make install`
+switches the virtual environment to a regular, non-editable package install;
+running `make dev` switches it back. `make release` publishes prebuilt
+artifacts only when the working tree is clean and the exact project-version
+tag points to `HEAD`. `make docs` generates API reference Markdown under
+`docs/pydoc/`.
 
 See [the original investigation](https://github.com/bitplane/xfh/blob/master/docs/research/initial-findings.md)
 for the provenance of the project and
