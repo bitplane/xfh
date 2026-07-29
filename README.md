@@ -1,54 +1,63 @@
-# xfh
+# 🗜️ xfh
 
-`xfh` is a pure-Python data-recovery library and command-line tool for files
+`xfh` is a pure-Python library and command-line tool for recovering files
 compressed with the Amiga XPK system, including files written transparently
 through DiskExpander.
 
-The project is under active format-recovery work. It currently supports the
-later `XPKF` container, the DiskExpander 2.1 wrapper, and 41 codec identifiers
-in pure Python. Historical compatibility identifiers `CBR1` (CBR0) and `FRHT`
-(RAKE) are accepted as exact stream-format aliases. See the
-[codec support table](https://github.com/bitplane/xfh/blob/master/docs/codec-support.md)
-for the evidence and limitations behind each codec.
+It requires Python 3.10 or newer and has no runtime dependencies.
 
-## Installation
-
-`xfh` requires Python 3.10 or newer and has no runtime dependencies. After the
-first release is published to PyPI, install it with:
+## Install
 
 ```console
 python -m pip install xfh
 ```
 
-Until then, install a checkout directly:
+## Help
 
 ```console
-python -m pip install .
+xfh --help
+xfh info --help
+xfh verify --help
+xfh unpack --help
 ```
 
-## Quick start
+You can also run the command as `python -m xfh`.
 
-Inspect a stream before writing anything, strictly verify it, and then unpack
-it:
+## Use
+
+Inspect a packed file:
 
 ```console
 xfh info packed-file
+```
+
+Verify that a file decompresses successfully without writing its contents:
+
+```console
 xfh verify packed-file
+```
+
+Recover a file:
+
+```console
 xfh unpack packed-file recovered-file
 ```
 
 Existing output files are not overwritten unless `--force` is supplied.
-Decompression is limited to 256 MiB by default; use `--max-output-size` to set
-an appropriate byte limit for a known larger file.
+Output is limited to 256 MiB by default; use `--max-output-size` to choose a
+different byte limit.
 
-For a damaged stream, salvage mode writes only the prefix decoded before the
-first failing chunk. Its exit status is `4` when recovery is incomplete:
+For a damaged stream, salvage mode writes the prefix recovered before the
+first failing chunk. It exits with status 4 when recovery is incomplete:
 
 ```console
 xfh unpack damaged-file recovered-prefix --salvage --report recovery.json
 ```
 
-The public Python API accepts bytes-like input:
+Keep the original packed file unchanged and validate salvaged output with
+tools appropriate for its file type.
+
+## Python
 
 ```python
 from pathlib import Path
@@ -57,56 +66,24 @@ import xfh
 
 packed = Path("packed-file").read_bytes()
 info = xfh.inspect(packed)
-plain = xfh.decompress(packed, limits=xfh.Limits(max_output_size=512 * 1024 * 1024))
-Path("recovered-file").write_bytes(plain)
+plain = xfh.decompress(packed)
 
 print(info.codec, len(plain))
+Path("recovered-file").write_bytes(plain)
 ```
 
-Use `xfh.decompress_file()` when writing to disk: it uses an atomic destination
-write and refuses to replace an existing file by default.
+`xfh.decompress_file()` provides atomic, non-overwriting file output.
+`xfh.Limits` controls maximum output size and chunk count.
 
-## Recovery and stability
+## Supported codecs
 
-Strict decoding validates the container, declared sizes, checksums, chunk
-output sizes, and initial-byte prefix where the format provides them. It either
-returns the complete declared output or raises an `xfh.XfhError` subclass.
-Password-protected streams are detected but not decoded.
+`xfh` supports these XPK codec identifiers:
 
-Salvage is deliberately opt-in. Its output can be useful evidence, but an
-incomplete result is not proof that every returned byte represents an intact
-original file. Keep the source media and packed files unchanged, work on
-copies, review the recovery report, and validate recovered data with tools
-specific to its file type.
+`ACCA`, `ARTM`, `BLZW`, `BZP2`, `CBR0`, `CBR1`, `CRM2`, `CRMS`, `CYB2`,
+`DLTA`, `DUKE`, `FAST`, `FBR2`, `FRHT`, `FRLE`, `GZIP`, `HFMN`, `HUFF`,
+`ILZR`, `IMPL`, `LHLB`, `LZBS`, `LZW2`, `LZW3`, `LZW4`, `LZW5`, `MASH`,
+`NONE`, `NUKE`, `PWPK`, `RAKE`, `RDCN`, `RLEN`, `SDHC`, `SHR3`, `SHRI`,
+`SLZ3`, `SMPL`, `SQSH`, `TDCS`, and `ZENO`.
 
-This is alpha software reconstructed from historical implementations and
-surviving samples. Codec support varies in strength from headless-UAE packer
-fixtures to source-derived decoder tests; the support table records that
-distinction. The API and command-line interface may change before 1.0.
-
-## Development
-
-Development follows the template workflow:
-
-```console
-make dev
-make test
-make coverage
-make lint
-make docs
-make dist
-```
-
-`make all` runs the complete local validation and build. `make install`
-switches the virtual environment to a regular, non-editable package install;
-running `make dev` switches it back. `make release` publishes prebuilt
-artifacts only when the working tree is clean and the exact project-version
-tag points to `HEAD`. `make docs` generates API reference Markdown under
-`docs/pydoc/`.
-
-See [the original investigation](https://github.com/bitplane/xfh/blob/master/docs/research/initial-findings.md)
-for the provenance of the project and
-[the format notes](https://github.com/bitplane/xfh/blob/master/docs/format.md)
-for current support boundaries. The
-[oracle matrix](https://github.com/bitplane/xfh/blob/master/docs/oracle-matrix.md)
-records results from the isolated original Amiga implementation.
+`CBR1` is an alias for `CBR0`; `FRHT` is an alias for `RAKE`.
+Password-protected streams are detected but are not currently decoded.
