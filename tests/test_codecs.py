@@ -3,7 +3,6 @@ import zlib
 from pathlib import Path
 
 import pytest
-
 import xfh
 from xfh.codecs import decode, supported_codecs
 from xfh.codecs._prefix import PrefixDecoder, variable_length
@@ -29,6 +28,16 @@ def test_huff_single_symbol_stream() -> None:
             table += b"\xff"  # wrapped length zero: symbol absent
     payload = b"\0\0\xab\xad\xca\xfe" + table + b"\0"
     assert decode("HUFF", payload, 6) == b"A" * 6
+
+
+def test_lzcb_oracle_rejects_every_truncation() -> None:
+    root = Path(__file__).parent / "fixtures" / "oracle"
+    packed = bytes.fromhex((root / "lzcb050-repeat1k.hex").read_text())
+    payload = parse(packed, DEFAULT_LIMITS).chunks[0].payload
+    assert decode("LZCB", payload, 1024) == (b"Amiga XPK!" * 128)[:1024]
+    for length in range(len(payload)):
+        with pytest.raises(CorruptDataError):
+            decode("LZCB", payload[:length], 1024)
 
 
 def test_initial_codec_set() -> None:
@@ -63,6 +72,7 @@ def test_initial_codec_set() -> None:
         "ILZR",
         "ZENO",
         "LZBS",
+        "LZCB",
         "SLZ3",
         "TDCS",
         "LHLB",
@@ -112,6 +122,7 @@ def test_initial_codec_set() -> None:
         ("ILZR", b"\0\0"),
         ("ZENO", b"\0" * 6),
         ("LZBS", b""),
+        ("LZCB", b""),
         ("SLZ3", b""),
         ("TDCS", b""),
         ("LHLB", b""),

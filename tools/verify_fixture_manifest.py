@@ -37,6 +37,7 @@ PUBLIC_CODECS = {
     "LZW5",
     "ZENO",
     "LZBS",
+    "LZCB",
     "SLZ3",
     "SDHC",
     "LHLB",
