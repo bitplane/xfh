@@ -28,6 +28,21 @@ PUBLIC_CODECS = {
     "HFMN",
     "MASH",
     "SQSH",
+    "ACCA",
+    "FBR2",
+    "ILZR",
+    "LZW2",
+    "LZW3",
+    "LZW4",
+    "LZW5",
+    "ZENO",
+}
+EVIDENCE = {
+    "original-amiga-roundtrip",
+    "xfh-decoded",
+    "ancient-cross-checked",
+    "source-derived",
+    "synthetic-malformed",
 }
 
 
@@ -98,6 +113,13 @@ def verify_manifest(path: Path) -> None:
             raise ValueError(f"{identifier}: mode must be an integer")
         if fixture.get("status") != "success":
             raise ValueError(f"{identifier}: public fixtures must have status=success")
+        evidence = fixture.get("evidence")
+        if evidence is not None and (
+            not isinstance(evidence, list)
+            or not evidence
+            or any(item not in EVIDENCE for item in evidence)
+        ):
+            raise ValueError(f"{identifier}: invalid evidence labels")
         for field in ARTIFACT_FIELDS:
             _verify_artifact(path.parent, fixture.get(field))
 

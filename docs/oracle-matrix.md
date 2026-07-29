@@ -57,20 +57,21 @@ packer/vector pairs are machine-readable exclusions and are never emitted
 into a guest stage. `oracle.py verify-python` performs the direct comparison
 and records its results as JSON.
 
-`SHR3` and the CyberYAFA `LZW2`–`LZW5` variants are implemented from their
-historical decoder definitions. No corresponding original compressor
-libraries were present in the recovered collection, so these variants use
-reviewable synthetic streams rather than claiming original-packer oracle
-coverage. SHR3 is additionally tested by converting both packed chunks from
+The CyberYAFA `LZW2`–`LZW5` variants are now backed by preserved original
+libraries and headless UAE fixtures across every reported mode boundary.
+`SHR3` remains source-derived because no corresponding original library has
+been located; it is additionally tested by converting both packed chunks from
 the 64 KiB SHRI continuation fixture to its headerless chunk representation.
 
-`ACCA`, `ARTM`, `FBR2`, `ILZR`, and `ZENO` are implemented from the same
-historical decoder definitions with bounded source-derived streams and
-malformed-input property tests. Their original compressor libraries were also
-absent from the recovered collection; UAE-generated acceptance data remains a
-separate follow-up rather than being implied by the current fixtures. Compact
-source-derived XPK containers for all five were independently decompressed and
-compared byte-for-byte with Ancient 2.3.0.
+Preserved original `ACCA`, `FBR2`, `ILZR`, and `ZENO` libraries were also
+located and exercised under UAE. Together with the LZW family, 157 generated
+artifacts round-trip in the original master library and decode byte-exactly in
+Python. Compact fixtures, private library hashes, and the preservation archive
+hash are linked in the public manifest; the binaries themselves are not
+redistributed. `ARTM` remains source-derived because its original library has
+not been located. Compact source-derived XPK containers for these codecs were
+also independently compared byte-for-byte with Ancient 2.3.0 where Ancient
+supports the emitted variant.
 
 FS-UAE runs behind Xvfb with Mesa software rendering, so oracle generation
 does not map a window onto the host desktop.

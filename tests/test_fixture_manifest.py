@@ -57,6 +57,15 @@ def test_parent_path_is_rejected(tmp_path: Path) -> None:
         verify_manifest(path)
 
 
+def test_unknown_evidence_label_is_rejected(tmp_path: Path) -> None:
+    path = _manifest(tmp_path)
+    manifest = json.loads(path.read_text())
+    manifest["fixtures"][0]["evidence"] = ["made-up"]
+    path.write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match="evidence"):
+        verify_manifest(path)
+
+
 def test_hex_encoded_artifact_is_hashed_after_decoding(tmp_path: Path) -> None:
     path = _manifest(tmp_path)
     manifest = json.loads(path.read_text())

@@ -160,17 +160,17 @@ def test_new_codec_structural_failures(
 
 @pytest.mark.parametrize("codec", ["LZW2", "LZW3"])
 def test_lzw2_and_lzw3_literal_and_match(codec: str) -> None:
-    assert decode(codec, b"\x02A\xff\xff\0", 5) == b"A" * 5
+    assert decode(codec, b"\0\0\0\x02A\xff\xff\0", 5) == b"A" * 5
 
 
 def test_lzw4_literal_and_match() -> None:
-    assert decode("LZW4", b"\x40A\xff\xff\0", 4) == b"A" * 4
+    assert decode("LZW4", b"\x40\0\0\0A\xff\xff\0", 4) == b"A" * 4
 
 
 def test_lzw5_all_match_classes() -> None:
-    assert decode("LZW5", b"\x10A\xff\xfe", 5) == b"A" * 5
-    assert decode("LZW5", b"\x20A\xff\xf4", 7) == b"A" * 7
-    assert decode("LZW5", b"\x30A\xff\xff\0", 4) == b"A" * 4
+    assert decode("LZW5", b"\x10\0\0\0A\xff\xfe", 5) == b"A" * 5
+    assert decode("LZW5", b"\x20\0\0\0A\xff\xf4", 7) == b"A" * 7
+    assert decode("LZW5", b"\x30\0\0\0A\xff\xff\0", 4) == b"A" * 4
 
 
 def test_shr3_uses_shri_model_without_the_per_chunk_size_header() -> None:

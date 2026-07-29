@@ -29,8 +29,10 @@ def decompress_fbr2(payload: bytes, output_size: int, previous: bytes = b"") -> 
         encoded = source.word(width)
         literal = bool(encoded & sign)
         count = (modulus - encoded if literal else encoded) + 1
-        if len(output) + count > output_size:
-            raise CorruptDataError("FBR2 run exceeds declared size")
+        # Several original FBR2 packers round their final literal run beyond
+        # the declared raw size. The Amiga decoder stops at the output buffer;
+        # clamp equivalently without permitting an out-of-bounds write.
+        count = min(count, output_size - len(output))
         if literal:
             output.extend(source.byte() for _ in range(count))
         else:

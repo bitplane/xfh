@@ -15,7 +15,7 @@ from xfh.errors import CorruptDataError
 
 def _decode_lzw23(payload: bytes, output_size: int) -> bytes:
     source = ByteInput(payload)
-    bits = BitReader(source.word, 8, lsb=True)
+    bits = BitReader(source.word, 32, lsb=True)
     output = bytearray()
     while len(output) < output_size:
         if not bits.read(1):
@@ -52,7 +52,7 @@ def decompress_lzw4(payload: bytes, output_size: int, previous: bytes = b"") -> 
 
     del previous
     source = ByteInput(payload)
-    bits = BitReader(source.word, 8)
+    bits = BitReader(source.word, 32)
     output = bytearray()
     while len(output) < output_size:
         if not bits.read(1):
@@ -73,7 +73,7 @@ def decompress_lzw5(payload: bytes, output_size: int, previous: bytes = b"") -> 
 
     del previous
     source = ByteInput(payload)
-    bits = BitReader(source.word, 8)
+    bits = BitReader(source.word, 32)
     output = bytearray()
     while len(output) < output_size:
         mode = bits.read(2)
