@@ -84,13 +84,13 @@ Path("recovered-file").write_bytes(plain)
 `xfh` supports these XPK codec identifiers:
 
 `ACCA`, `ARTM`, `BLFH`, `BLZW`, `BZP2`, `CBR0`, `CBR1`, `CRM2`, `CRMS`, `CYB2`,
-`DLTA`, `DUKE`, `ELZX`, `FAST`, `FBR2`, `FRHT`, `FRLE`, `GZIP`, `HFMN`, `HUFF`,
-`IDEA`, `ILZR`, `IMPL`, `LHLB`, `LZBS`, `LZCB`, `LZW2`, `LZW3`, `LZW4`, `LZW5`,
-`MASH`, `NONE`, `NUID`, `NUKE`, `PPMQ`, `PWPK`, `RAKE`, `RDCN`, `RLEN`, `SASC`,
-`SDHC`, `SHID`, `SHR3`, `SHRI`, `SHSC`, `SLZ3`, `SLZX`, `SMPL`, `SQSH`,
-`TDCS`, and `ZENO`.
+`DLTA`, `DUKE`, `ELZX`, `ENCO`, `FAST`, `FBR2`, `FEAL`, `FRHT`, `FRLE`, `GZIP`,
+`HFMN`, `HUFF`, `IDEA`, `ILZR`, `IMPL`, `LHLB`, `LZBS`, `LZCB`, `LZW2`, `LZW3`,
+`LZW4`, `LZW5`, `MASH`, `NONE`, `NUID`, `NUKE`, `PPMQ`, `PWPK`, `RAKE`, `RDCN`,
+`RLEN`, `SASC`, `SDHC`, `SHID`, `SHR3`, `SHRI`, `SHSC`, `SLZ3`, `SLZX`, `SMPL`,
+`SQSH`, `TDCS`, and `ZENO`.
 
 `CBR1` is an alias for `CBR0`; `FRHT` is an alias for `RAKE`.
-`ENCO` and `FEAL` are also supported. BLFH's packed and unpacked ECB, OFB,
-CFB, and CBC modes are decoded. These obsolete ciphers are included solely
-for recovery and must not be used to protect new data.
+BLFH's packed and unpacked ECB, OFB, CFB, and CBC modes are decoded. Obsolete
+ciphers are included solely for recovery and must not be used to protect new
+data.
