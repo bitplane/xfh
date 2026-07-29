@@ -11,15 +11,25 @@ def xor16(data: bytes) -> int:
     return high << 8 | low
 
 
-def xpkf(codec: str, chunks: list[tuple[int, bytes, int]], initial: bytes = b"") -> bytes:
+def xpkf(
+    codec: str,
+    chunks: list[tuple[int, bytes, int]],
+    initial: bytes = b"",
+    *,
+    long_headers: bool = False,
+) -> bytes:
     raw_size = sum(raw_size for kind, _, raw_size in chunks if kind != 15)
     body = bytearray()
     for kind, payload, chunk_raw_size in [*chunks, (15, b"", 0)]:
-        header = bytearray(8)
+        header = bytearray(12 if long_headers else 8)
         header[0] = kind
         header[2:4] = xor16(payload).to_bytes(2, "big")
-        header[4:6] = len(payload).to_bytes(2, "big")
-        header[6:8] = chunk_raw_size.to_bytes(2, "big")
+        if long_headers:
+            header[4:8] = len(payload).to_bytes(4, "big")
+            header[8:12] = chunk_raw_size.to_bytes(4, "big")
+        else:
+            header[4:6] = len(payload).to_bytes(2, "big")
+            header[6:8] = chunk_raw_size.to_bytes(2, "big")
         header[1] = 0
         header[1] = _xor8(header)
         body += header
@@ -30,7 +40,8 @@ def xpkf(codec: str, chunks: list[tuple[int, bytes, int]], initial: bytes = b"")
     header[8:12] = codec.encode("ascii")
     header[12:16] = raw_size.to_bytes(4, "big")
     header[16:32] = initial[: min(16, raw_size)].ljust(16, b"\0")
-    header[34:36] = b"\1\2"
+    header[32] = int(long_headers)
+    header[34:36] = b"\0\0" if long_headers else b"\1\2"
     header[4:8] = (len(header) + len(body) - 8).to_bytes(4, "big")
     header[33] = _xor8(header)
     return bytes(header + body)

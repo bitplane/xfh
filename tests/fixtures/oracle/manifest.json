@@ -20,7 +20,12 @@
       "LZBS": "fec554d062e9fac436c5d06ad1b79163d9b5d000b3e0c46528c27d5b913adad9",
       "SLZ3": "40122e38f39bda3a7add079252f4c6382f9f1ff220251cbc71dba2ab5246da26",
       "SDHC": "dd7a4a0f19ee84f90e9aaa7640fd44e16dee2b17bcde36d3f19377803e5480a7",
+      "LHLB": "2fc12f544703b250c6dbd43bd15e79e76acbaa6c72adcaff58b4d1d02effaa0e",
       "ZENO": "429c5ad87f48c2f5657f2ad9dc4917504780a27dc71383ef0ad45ea592c5991e"
+    },
+    "private_dependency_sha256": {
+      "lh.library": "dbbaa11928ff1f82f8b66b09884423243e098e711f5fc424e9801eee4d34bb0a",
+      "xpkcybhandle.library": "e7cbd8872d05fb17d4373997978c2c5e1529ca70999ab15bea0b810b82bb8c45"
     }
   },
   "fixtures": [
@@ -98,6 +103,7 @@
     {"id":"zeno050-repeat1k","codec":"ZENO","mode":50,"status":"success","evidence":["original-amiga-roundtrip","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"zeno050-repeat1k.hex","encoding":"hex","size":224,"sha256":"13d7a9b9035e244c27d1b1cb542f5ee135b9929d377c3a77ba3d8f3a598c1795"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}},
     {"id":"lzbs100-repeat1k","codec":"LZBS","mode":100,"status":"success","evidence":["original-amiga-roundtrip","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"lzbs100-repeat1k.hex","encoding":"hex","size":84,"sha256":"f683e1f5c45caaa08338b81fb4c85c7784a1c101ca8412d75daf25506cfc57a8"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}},
     {"id":"slz3100-repeat1k","codec":"SLZ3","mode":100,"status":"success","evidence":["original-amiga-roundtrip","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"slz3100-repeat1k.hex","encoding":"hex","size":192,"sha256":"d868b3df9d649ebf2b4e6886273c5d202a814b6bc55a42f296d6d7029e63dddc"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}},
-    {"id":"sdhc047-repeat1k","codec":"SDHC","mode":47,"status":"success","evidence":["original-amiga-roundtrip","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"sdhc047-repeat1k.hex","encoding":"hex","size":1088,"sha256":"912994e92303cd652677861fcf8ecba02724bce040acdaacb4b51f16921cdee2"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}}
+    {"id":"sdhc047-repeat1k","codec":"SDHC","mode":47,"status":"success","evidence":["original-amiga-roundtrip","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"sdhc047-repeat1k.hex","encoding":"hex","size":1088,"sha256":"912994e92303cd652677861fcf8ecba02724bce040acdaacb4b51f16921cdee2"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}},
+    {"id":"lhlb100-repeat1k","codec":"LHLB","mode":100,"status":"success","evidence":["original-amiga-roundtrip","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"lhlb100-repeat1k.hex","encoding":"hex","size":100,"sha256":"006761577f29e0910c932cbfd1712c432478e2a22580a91e661acf556318cda2"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}}
   ]
 }

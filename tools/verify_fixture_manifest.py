@@ -39,6 +39,7 @@ PUBLIC_CODECS = {
     "LZBS",
     "SLZ3",
     "SDHC",
+    "LHLB",
 }
 EVIDENCE = {
     "original-amiga-roundtrip",
