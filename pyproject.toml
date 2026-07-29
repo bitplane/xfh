@@ -11,11 +11,22 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
     "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: System :: Archiving :: Compression",
 ]
 dependencies = []
+
+[project.urls]
+Changelog = "https://github.com/bitplane/xfh/blob/master/CHANGELOG.md"
+Issues = "https://github.com/bitplane/xfh/issues"
+Repository = "https://github.com/bitplane/xfh"
 
 [project.scripts]
 xfh = "xfh.cli:main"
@@ -58,3 +69,11 @@ select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.ruff.format]
 docstring-code-format = true
+
+[tool.flit.sdist]
+include = [
+    "CHANGELOG.md",
+    "docs/",
+    "tests/",
+    "tools/",
+]
