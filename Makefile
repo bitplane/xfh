@@ -1,4 +1,4 @@
-.PHONY: help dev test coverage lint dist clean
+.PHONY: help dev test coverage lint dist release clean
 
 PYTHON ?= python3
 
@@ -28,6 +28,9 @@ lint: .venv/.installed-dev ## Check formatting and lint
 dist: .venv/.installed-dev ## Build wheel and source archive
 	.venv/bin/python -m build --no-isolation
 	.venv/bin/python -m twine check dist/*
+
+release: scripts/release.sh ## Publish the prebuilt tagged version to PyPI
+	scripts/release.sh xfh
 
 clean: ## Remove generated local files
 	rm -rf .coverage .pytest_cache .ruff_cache build dist htmlcov site src/xfh.egg-info

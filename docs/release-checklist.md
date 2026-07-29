@@ -48,10 +48,25 @@ python -m venv ~/tmp/xfh-release-venv
 - Upload to TestPyPI first when changing packaging or publishing credentials.
 - Install the exact TestPyPI artifact in a fresh environment and repeat the
   smoke test.
-- Tag the reviewed release commit as `vX.Y.Z` and push the tag.
+- Tag the reviewed release commit with the exact project version, such as
+  `0.1.0`, and push the tag.
 - Upload exactly the already-reviewed artifacts to PyPI; do not rebuild between
   TestPyPI and PyPI.
 - Create a GitHub release from the tag with concise release notes.
+
+The first PyPI upload bootstraps the project and therefore needs a temporary
+account-wide token:
+
+```console
+read -rsp "PyPI token: " PYPI_TOKEN && echo
+export PYPI_TOKEN
+make release
+unset PYPI_TOKEN
+```
+
+After that upload, replace it with a token scoped to the new `xfh` project.
+For a TestPyPI upload, additionally set `PYPI_REPOSITORY_URL` to the TestPyPI
+legacy upload endpoint.
 
 ## Verify
 
