@@ -14,6 +14,11 @@ private files, logs, and the complete workspace are not distributed.
 | RAKE | 100 | 0–25, 26–50, 51–75, 76–100 |
 | HUFF | 50 | 0–100 |
 | SHRI | 100 | 0–14, 15–28, 29–42, 43–56, 57–70, 71–84, 85–100 |
+| DLTA | 100 | 0–100 |
+| SMPL | 50 | 0–100 |
+| HFMN | 0 | 0–100 |
+| MASH | 100 | 0–100 |
+| SQSH | 100 | 0–100 |
 
 The matrix exercised every numeric mode on a canonical text vector and every
 range boundary/default on deterministic pattern and size vectors:
@@ -36,6 +41,15 @@ each codec are committed as hexadecimal fixtures. The historical packers are
 run in separate or short-lived emulator sessions because repeated use can
 crash the original Amiga process; this is an oracle limitation rather than an
 accepted decoder failure.
+
+A third set covers `DLTA`, `SMPL`, `HFMN`, `MASH`, and `SQSH`. Short isolated
+runs produced 35 byte-exact original pack/unpack artifacts across modes 0,
+default, and 100. Python directly decoded all 20 generated compressed DLTA,
+HFMN, MASH, and SQSH containers. The SMPL packer selected raw XPK chunks for
+all 15 vectors, so its decoder additionally has a source-derived synthetic
+prefix-code test rather than claiming compressed oracle coverage. DLTA hangs
+on a one-byte input and HFMN hangs on one broad byte-pattern input; those
+original-packer defects are excluded from the safe fixture stage.
 
 FS-UAE runs behind Xvfb with Mesa software rendering, so oracle generation
 does not map a window onto the host desktop.

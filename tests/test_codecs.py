@@ -36,6 +36,11 @@ def test_initial_codec_set() -> None:
         "RDCN",
         "BLZW",
         "DUKE",
+        "DLTA",
+        "SMPL",
+        "HFMN",
+        "MASH",
+        "SQSH",
     } <= supported_codecs()
 
 
@@ -53,6 +58,11 @@ def test_initial_codec_set() -> None:
         ("RDCN", b""),
         ("BLZW", b""),
         ("DUKE", b""),
+        ("DLTA", b""),
+        ("SMPL", b""),
+        ("HFMN", b""),
+        ("MASH", b""),
+        ("SQSH", b""),
     ],
 )
 def test_new_codecs_reject_malformed_streams(codec: str, payload: bytes) -> None:
@@ -71,6 +81,14 @@ def test_duke_applies_delta_after_nuke() -> None:
         accumulator = (accumulator + value) & 0xFF
         expected.append(accumulator)
     assert decode("DUKE", payload, 1024) == expected
+
+
+def test_smpl_single_symbol_delta_stream() -> None:
+    # Version 1, symbol zero has one-bit code 0; every other symbol is absent.
+    bit_string = "0001" + "0" + "0000" * 255
+    bit_string += "0" * (-len(bit_string) % 8)
+    payload = b"\0\1" + int(bit_string, 2).to_bytes(len(bit_string) // 8, "big")
+    assert decode("SMPL", payload, 4) == bytes(4)
 
 
 def test_blzw_width_change_and_dictionary_reset() -> None:

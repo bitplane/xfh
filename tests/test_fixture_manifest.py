@@ -96,6 +96,10 @@ def test_shri_continuation_chunk_oracle() -> None:
         ("rdcn100-repeat1k.hex", (b"Amiga XPK!" * 128)[:1024]),
         ("blzw060-zero256.hex", bytes(256)),
         ("duke050-bytes.hex", bytes(range(256))),
+        ("dlta100-text.hex", b"XFH recovery oracle\r\n" * 4),
+        ("hfmn000-text.hex", b"XFH recovery oracle\r\n" * 4),
+        ("mash100-repeat1k.hex", (b"Amiga XPK!" * 128)[:1024]),
+        ("sqsh100-repeat1k.hex", (b"Amiga XPK!" * 128)[:1024]),
     ],
 )
 def test_additional_codec_oracles(fixture: str, expected: bytes) -> None:

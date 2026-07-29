@@ -25,6 +25,11 @@ MODE_RANGES = {
     "RDCN": ((0, 100),),
     "BLZW": ((0, 14), (15, 28), (29, 42), (43, 57), (58, 71), (72, 85), (86, 100)),
     "DUKE": ((0, 100),),
+    "DLTA": ((0, 100),),
+    "SMPL": ((0, 100),),
+    "HFMN": ((0, 100),),
+    "MASH": ((0, 100),),
+    "SQSH": ((0, 100),),
 }
 DEFAULT_MODES = {
     "NONE": 50,
@@ -39,6 +44,11 @@ DEFAULT_MODES = {
     "RDCN": 100,
     "BLZW": 60,
     "DUKE": 50,
+    "DLTA": 100,
+    "SMPL": 50,
+    "HFMN": 0,
+    "MASH": 100,
+    "SQSH": 100,
 }
 EXHAUSTIVE_MODE_CODECS = {"NONE", "NUKE", "FAST", "RAKE", "HUFF", "SHRI"}
 
@@ -183,10 +193,17 @@ def _representative_modes(codec: str) -> tuple[int, ...]:
     return tuple(sorted(values))
 
 
-def render_matrix(workspace: Path, *, codecs: set[str] | None = None, resume: bool = False) -> None:
+def render_matrix(
+    workspace: Path,
+    *,
+    codecs: set[str] | None = None,
+    vectors: set[str] | None = None,
+    resume: bool = False,
+) -> None:
     vectors = [
         item["id"]
         for item in json.loads((workspace / "metadata" / "vectors.json").read_text())["vectors"]
+        if vectors is None or item["id"] in vectors
     ]
     cases: list[dict[str, object]] = []
     lines = ["FailAt 21", "MakeDir RAM:matrix"]
@@ -314,6 +331,7 @@ def main() -> int:
     matrix_parser.add_argument(
         "--codec", action="append", choices=tuple(MODE_RANGES), dest="codecs"
     )
+    matrix_parser.add_argument("--vector", action="append", choices=tuple(_vectors()))
     matrix_parser.add_argument("--resume", action="store_true")
     analyze_parser = subparsers.add_parser("analyze")
     analyze_parser.add_argument("workspace", type=Path)
@@ -335,6 +353,7 @@ def main() -> int:
         render_matrix(
             arguments.workspace,
             codecs=set(arguments.codecs) if arguments.codecs else None,
+            vectors=set(arguments.vector) if arguments.vector else None,
             resume=arguments.resume,
         )
     else:
