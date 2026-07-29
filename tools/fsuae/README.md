@@ -20,6 +20,12 @@ versions, codec, mode, and command in `manifest.json`. Verify the unpacked
 result inside the guest and again with Python before accepting a fixture.
 Never attach a personal disk image to the fixture VM.
 
+ELZX and SLZX additionally require the original Amiga LZX command. The
+registered LZX 1.21R release and author-authorized generic keyfile are available
+from Aminet as `util/arc/lzx121r1.lha`. Install `LZX_68000EC-r` as `C:LZX` and
+`LZX.Keyfile` as `L:LZX.Keyfile` inside the disposable guest. Do not commit
+either binary; record their hashes in the private oracle metadata.
+
 Known original-packer hangs are encoded in `UNSAFE_CASES` and omitted from
 generated guest stages. They remain visible as exclusions in matrix metadata.
 After a run, compare every completed container directly with the Python

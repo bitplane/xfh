@@ -49,6 +49,7 @@ from xfh.codecs import lhlb as _lhlb  # noqa: E402,F401
 from xfh.codecs import lz_small as _lz_small  # noqa: E402,F401
 from xfh.codecs import lzcb as _lzcb  # noqa: E402,F401
 from xfh.codecs import lzw_variants as _lzw_variants  # noqa: E402,F401
+from xfh.codecs import lzx_wrappers as _lzx_wrappers  # noqa: E402,F401
 from xfh.codecs import mash as _mash  # noqa: E402,F401
 from xfh.codecs import none as _none  # noqa: E402,F401
 from xfh.codecs import nuke as _nuke  # noqa: E402,F401

@@ -1,6 +1,6 @@
 # Codec support and evidence
 
-`xfh` currently recognizes 45 XPK identifiers. “Amiga pack” means at least one
+`xfh` currently recognizes 47 XPK identifiers. “Amiga pack” means at least one
 fixture was created and unpacked by the original Amiga libraries under
 headless UAE, then decoded byte-exactly by Python. “Derived” means the decoder
 is covered by source-derived or transformed fixtures but an original packer
@@ -8,7 +8,7 @@ artifact is not yet available.
 
 | Evidence | Codecs |
 | --- | --- |
-| Original Amiga pack/unpack | ACCA, BLZW, BZP2, CBR0, DLTA, DUKE, FAST, FBR2, FRLE, GZIP, HFMN, HUFF, ILZR, IMPL, LHLB, LZBS, LZCB, LZW2, LZW3, LZW4, LZW5, MASH, NONE, NUKE, PPMQ, RAKE, RDCN, RLEN, SASC, SDHC, SHRI, SHSC, SLZ3, SQSH, ZENO |
+| Original Amiga pack/unpack | ACCA, BLZW, BZP2, CBR0, DLTA, DUKE, ELZX, FAST, FBR2, FRLE, GZIP, HFMN, HUFF, ILZR, IMPL, LHLB, LZBS, LZCB, LZW2, LZW3, LZW4, LZW5, MASH, NONE, NUKE, PPMQ, RAKE, RDCN, RLEN, SASC, SDHC, SHRI, SHSC, SLZ3, SLZX, SQSH, ZENO |
 | Exact historical aliases | CBR1, FRHT |
 | Derived or transformed | ARTM, CRM2, CRMS, CYB2, PWPK, SHR3, SMPL, TDCS |
 
@@ -27,16 +27,21 @@ decoded by an independent Crunch-Mania implementation. They remain in the
 derived row because the committed XPK envelopes were constructed outside the
 original XPK master library.
 
+ELZX and SLZX were packed and unpacked through their original libraries using
+LZX 1.21R under headless UAE, then decoded byte-exactly by Python. Modes 0, 20,
+21, 40, 41, 60, 61, 80, and 81 all succeeded. Both original wrappers hang when
+mode 100 is passed to their external LZX command, so the oracle excludes that
+exact mode while retaining it as preservation metadata.
+
 ## Preserved but not implemented
 
-The preservation inventory contains 11 additional XPK identifiers. The
+The preservation inventory contains nine additional XPK identifiers. The
 original libraries were identified by filename, embedded version strings, and
 an `xQuery` run under the isolated headless-UAE oracle.
 
 | Class | Codecs | Notes |
 | --- | --- | --- |
 | Standalone compression | CYB1, DHUF, DMCB | Require authentic compressed samples |
-| External backend wrappers | ELZX, SLZX | Invoke the separate Amiga `lzx` command |
 | Encryption | BLFH, ENCO, FEAL, IDEA | Require password and encryption API design |
 | Composite | NUID, SHID | Combine NUKE or SHRI with IDEA |
 
@@ -48,7 +53,6 @@ The embedded versions and original-library packing modes are:
 | CYB1 | 1.0 | 100 | 0–100 |
 | DHUF | 0.58 | 50 | 0–100 |
 | DMCB | 0.8 | 100 | 0–100 |
-| ELZX | 1.1 | 80 | 0–20, 21–40, 41–60, 61–80, 81–100 |
 | ENCO | 1.3 | — | — |
 | FEAL | 1.5 | — | — |
 | IDEA | 1.3 | — | — |
@@ -58,13 +62,10 @@ The embedded versions and original-library packing modes are:
 | SASC | 1.3 | 0 | 0–33 normal, 34–66 delta, 67–100 best |
 | SHID | 1.0 | 100 | 0–14, 15–28, 29–42, 43–56, 57–70, 71–84, 85–100 |
 | SHSC | 1.3 | 0 | 0–33 normal, 34–66 delta, 67–100 best |
-| SLZX | 1.1 | 80 | 0–20, 21–40, 41–60, 61–80, 81–100 |
 
 ENCO, FEAL, and IDEA identify themselves to `xQuery` but do not expose normal
 packing-mode metadata. They are deliberately deferred with BLFH, NUID, and
-SHID until password handling is designed. ELZX and SLZX are also deferred
-until the boundary between a pure-Python decoder and their external LZX
-backend is understood.
+SHID until password handling is designed.
 
 The seven standalone identifiers are not equally reproducible. The preserved
 CYB1 1.0 library is decrunch-only: attempts to pack through the original XPK

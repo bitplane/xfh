@@ -28,6 +28,8 @@
       "BZP2": "19084fe0a8fc15fbcabf6064fa2ab8e587b314cccd25b11008831f1bb9d4e8d7",
       "GZIP": "b25f4d4ef3845ff9f58ce9157ad7970e3a158fb0928d3de0a6fcd22ff271eeb8",
       "IMPL": "ba513d1ce8b5faf07d0b472f4df3bc07839afd993d4952af8fe76f5b36748880",
+      "ELZX": "50a2f1a3c8e9687b02d98734387c8d297bc40a6853c184a25bddfa41baabcdbd",
+      "SLZX": "73113b07f088746062cc09742695ff5f03d63b673c3f82caeaea521633bff318",
       "PWPK": "f856528152589a0dbe50e66bf2310f66dd4b8b6d44ed1dc01e7d57ca2ac989c5",
       "CRM2": "d04d2ee9cee8a01a9103cd9e0bec516ccad07664733d6017a48e38d0f63fb401",
       "CRMS": "108474c0a59330ae8229647dc1e0998a523be6cb5633b5aa79445892a6f16f1a",
@@ -35,7 +37,10 @@
     },
     "private_dependency_sha256": {
       "lh.library": "dbbaa11928ff1f82f8b66b09884423243e098e711f5fc424e9801eee4d34bb0a",
-      "xpkcybhandle.library": "e7cbd8872d05fb17d4373997978c2c5e1529ca70999ab15bea0b810b82bb8c45"
+      "xpkcybhandle.library": "e7cbd8872d05fb17d4373997978c2c5e1529ca70999ab15bea0b810b82bb8c45",
+      "lzx121r1.lha": "64d6bb56abea7fdec87dd20654a58fd1f04823bdc4339c5a9fa8edec80a67756",
+      "LZX_68000EC-r": "f6fbb438a000c7b430200b05350c935703d1c1d35da183191e65aa51d263b364",
+      "LZX.Keyfile": "72d75218ecfce6004b3f903e54d2cfeca30f4a0380d1a10da1b544eed2a8cf06"
     }
   },
   "fixtures": [
@@ -126,6 +131,8 @@
     {"id":"sasc000-repeat1k","codec":"SASC","mode":0,"status":"success","evidence":["original-amiga-roundtrip","ancient-cross-checked","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"sasc000-repeat1k.hex","encoding":"hex","size":72,"sha256":"ddb7492ce37854c2dc1e3682f1bdb2316c04daed8a27be321198d628345fcbee"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}},
     {"id":"sasc034-repeat1k","codec":"SASC","mode":34,"status":"success","evidence":["original-amiga-roundtrip","ancient-cross-checked","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"sasc034-repeat1k.hex","encoding":"hex","size":72,"sha256":"6765d06a173e02730f2a3f3bfd7e2713b12e0faf20179396992b5ce783081ae6"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}},
     {"id":"shsc000-repeat1k","codec":"SHSC","mode":0,"status":"success","evidence":["original-amiga-roundtrip","ancient-cross-checked","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"shsc000-repeat1k.hex","encoding":"hex","size":72,"sha256":"1743086a8ed7ea6c514f6851ca42672f052ce996cf8fbd6a2a3f290a19841550"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}},
-    {"id":"shsc034-repeat1k","codec":"SHSC","mode":34,"status":"success","evidence":["original-amiga-roundtrip","ancient-cross-checked","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"shsc034-repeat1k.hex","encoding":"hex","size":76,"sha256":"db195b6a53f9ac02d0b5b091a60215b63ef745ba6a08374c68584de755bbbcab"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}}
+    {"id":"shsc034-repeat1k","codec":"SHSC","mode":34,"status":"success","evidence":["original-amiga-roundtrip","ancient-cross-checked","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"shsc034-repeat1k.hex","encoding":"hex","size":76,"sha256":"db195b6a53f9ac02d0b5b091a60215b63ef745ba6a08374c68584de755bbbcab"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}},
+    {"id":"elzx080-repeat1k","codec":"ELZX","mode":80,"status":"success","evidence":["original-amiga-roundtrip","independent-cross-checked","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"elzx080-repeat1k.hex","encoding":"hex","size":168,"sha256":"adf8ba98653c54b5553634dbe3113f2255b382d7a067448ff041dd0c4ee1d7d2"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}},
+    {"id":"slzx080-repeat1k","codec":"SLZX","mode":80,"status":"success","evidence":["original-amiga-roundtrip","independent-cross-checked","xfh-decoded"],"input":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"},"packed":{"path":"slzx080-repeat1k.hex","encoding":"hex","size":168,"sha256":"6253fba9209df1d7c6ae097a04c12d046093d84e712311396cdf0d4add105107"},"unpacked":{"path":"repeat1k.hex","encoding":"hex","size":1024,"sha256":"53635ddc2d173591d102bc7a2705151ee071d4f4d1b121e46c081d0b1d639f68"}}
   ]
 }

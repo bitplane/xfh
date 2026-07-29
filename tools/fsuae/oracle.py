@@ -71,6 +71,7 @@ MODE_RANGES = {
     "CYB1": ((0, 100),),
     "DHUF": ((0, 100),),
     "DMCB": ((0, 100),),
+    "ELZX": ((0, 20), (21, 40), (41, 60), (61, 80), (81, 100)),
     "LZCB": ((0, 10), (11, 90), (91, 100)),
     "PPMQ": ((0, 100),),
     "SASC": ((0, 33), (34, 66), (67, 100)),
@@ -99,6 +100,7 @@ MODE_RANGES = {
         (90, 100),
     ),
     "IMPL": ((0, 10), (11, 30), (31, 50), (51, 75), (76, 98), (99, 100)),
+    "SLZX": ((0, 20), (21, 40), (41, 60), (61, 80), (81, 100)),
 }
 DEFAULT_MODES = {
     "NONE": 50,
@@ -134,6 +136,7 @@ DEFAULT_MODES = {
     "CYB1": 100,
     "DHUF": 50,
     "DMCB": 100,
+    "ELZX": 80,
     "LZCB": 50,
     "PPMQ": 50,
     "SASC": 0,
@@ -141,11 +144,16 @@ DEFAULT_MODES = {
     "BZP2": 40,
     "GZIP": 65,
     "IMPL": 100,
+    "SLZX": 80,
 }
 EXHAUSTIVE_MODE_CODECS = {"NONE", "NUKE", "FAST", "RAKE", "HUFF", "SHRI"}
 UNSAFE_CASES = {
     ("DLTA", "one"): "original packer hangs on a one-byte input",
     ("HFMN", "bytes"): "original packer hangs on the ascending-byte vector",
+}
+UNSAFE_MODES = {
+    ("ELZX", 100): "original wrapper hangs while invoking LZX at mode 100",
+    ("SLZX", 100): "original wrapper hangs while invoking LZX at mode 100",
 }
 
 
@@ -241,6 +249,46 @@ def inventory(workspace: Path, binaries: list[Path]) -> None:
     path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
 
 
+def record_dependency(
+    workspace: Path,
+    *,
+    archive: Path,
+    executable: Path,
+    keyfile: Path,
+    source_url: str,
+) -> None:
+    """Record externally distributed guest dependencies without copying them."""
+
+    records = [
+        {
+            "name": "Aminet archive",
+            "path": archive.name,
+            "size": archive.stat().st_size,
+            "sha256": _sha256(archive),
+            "source_url": source_url,
+        },
+        {
+            "name": "C:LZX",
+            "path": executable.name,
+            "size": executable.stat().st_size,
+            "sha256": _sha256(executable),
+        },
+        {
+            "name": "L:LZX.Keyfile",
+            "path": keyfile.name,
+            "size": keyfile.stat().st_size,
+            "sha256": _sha256(keyfile),
+        },
+    ]
+    manifest = {
+        "schema_version": SCHEMA_VERSION,
+        "redistributable": False,
+        "dependencies": records,
+    }
+    path = workspace / "metadata" / "external-dependencies.json"
+    path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n")
+
+
 def extract_workbench(workspace: Path, adf: Path) -> None:
     if not adf.is_file():
         raise SystemExit(f"{adf}: Workbench ADF not found")
@@ -296,7 +344,7 @@ def render_matrix(
     vectors: set[str] | None = None,
     resume: bool = False,
 ) -> None:
-    vectors = [
+    selected_vectors = [
         item["id"]
         for item in json.loads((workspace / "metadata" / "vectors.json").read_text())["vectors"]
         if vectors is None or item["id"] in vectors
@@ -307,15 +355,17 @@ def render_matrix(
         lines.append("Delete SHARED:outputs/matrix-status.txt QUIET")
     for codec in MODE_RANGES:
         modes_by_vector = {
-            "text": (
-                range(101) if codec in EXHAUSTIVE_MODE_CODECS else _representative_modes(codec)
-            ),
-            **{vector: _representative_modes(codec) for vector in vectors if vector != "text"},
+            vector: (
+                range(101)
+                if vector == "text" and codec in EXHAUSTIVE_MODE_CODECS
+                else _representative_modes(codec)
+            )
+            for vector in selected_vectors
         }
         for vector, modes in modes_by_vector.items():
             for mode in modes:
                 identifier = f"{codec.lower()}{mode:03d}-{vector}"
-                unsafe_reason = UNSAFE_CASES.get((codec, vector))
+                unsafe_reason = UNSAFE_CASES.get((codec, vector)) or UNSAFE_MODES.get((codec, mode))
                 case = {"id": identifier, "codec": codec, "mode": mode, "vector": vector}
                 if unsafe_reason:
                     case["excluded_reason"] = unsafe_reason
@@ -354,6 +404,10 @@ def render_matrix(
                 "unsafe_cases": [
                     {"codec": codec, "vector": vector, "reason": reason}
                     for (codec, vector), reason in sorted(UNSAFE_CASES.items())
+                ],
+                "unsafe_modes": [
+                    {"codec": codec, "mode": mode, "reason": reason}
+                    for (codec, mode), reason in sorted(UNSAFE_MODES.items())
                 ],
                 "cases": cases,
             },
@@ -464,6 +518,12 @@ def main() -> int:
     inventory_parser = subparsers.add_parser("inventory")
     inventory_parser.add_argument("workspace", type=Path)
     inventory_parser.add_argument("binary", nargs="+", type=Path)
+    dependency_parser = subparsers.add_parser("record-lzx-dependency")
+    dependency_parser.add_argument("workspace", type=Path)
+    dependency_parser.add_argument("--archive", required=True, type=Path)
+    dependency_parser.add_argument("--executable", required=True, type=Path)
+    dependency_parser.add_argument("--keyfile", required=True, type=Path)
+    dependency_parser.add_argument("--source-url", required=True)
     extract_parser = subparsers.add_parser("extract-workbench")
     extract_parser.add_argument("workspace", type=Path)
     extract_parser.add_argument("adf", type=Path)
@@ -488,6 +548,14 @@ def main() -> int:
         prepare(arguments.workspace, force=arguments.force)
     elif arguments.command == "inventory":
         inventory(arguments.workspace, arguments.binary)
+    elif arguments.command == "record-lzx-dependency":
+        record_dependency(
+            arguments.workspace,
+            archive=arguments.archive,
+            executable=arguments.executable,
+            keyfile=arguments.keyfile,
+            source_url=arguments.source_url,
+        )
     elif arguments.command == "extract-workbench":
         extract_workbench(arguments.workspace, arguments.adf)
     elif arguments.command == "write-config":

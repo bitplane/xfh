@@ -107,6 +107,8 @@ def test_initial_codec_set() -> None:
         "PWPK",
         "CRM2",
         "CRMS",
+        "ELZX",
+        "SLZX",
     } <= supported_codecs()
 
 
@@ -160,6 +162,8 @@ def test_initial_codec_set() -> None:
         ("PWPK", b""),
         ("CRM2", b""),
         ("CRMS", b""),
+        ("ELZX", b""),
+        ("SLZX", b""),
     ],
 )
 def test_new_codecs_reject_malformed_streams(codec: str, payload: bytes) -> None:
