@@ -23,6 +23,9 @@ private files, logs, and the complete workspace are not distributed.
 | SLZ3 | 100 | 0–100 |
 | SDHC | 50 | 0–7, 8–15, 16–23, 24–31, 32–39, 40–47, 48–55, 56–63, 64–71, 72–79, 80–87, 88–100 |
 | LHLB | 100 | 0–100 |
+| BZP2 | 40 | 0–19, 20–29, 30–39, 40–49, 50–59, 60–69, 70–79, 80–89, 90–100 |
+| GZIP | 65 | 0–9, 10–19, 20–29, 30–39, 40–49, 50–59, 60–69, 70–79, 80–89, 90–100 |
+| IMPL | 100 | 0–10, 11–30, 31–50, 51–75, 76–98, 99–100 |
 
 The matrix exercised every numeric mode on a canonical text vector and every
 range boundary/default on deterministic pattern and size vectors:
@@ -97,6 +100,18 @@ before unpacking. Consequently CYB2 remains source-derived rather than being
 mislabelled as original-Amiga verified. `TDCS` has no library in the
 preservation archive. Both retain synthetic success and malformed-stream
 coverage.
+
+Preserved BZP2, GZIP, and IMPL packers generated representative compressed
+fixtures that round-trip under headless UAE and decode byte-exactly in Python.
+The complete boundary/default matrix now contains 36 BZP2, 42 GZIP, 24 IMPL,
+and six LHLB byte-exact successes with no Python mismatches.
+
+PWPK, CRM2, and CRMS expose no packing modes in the preserved XPK libraries.
+An original Amiga PPMC utility generated the positive PowerPacker stream used
+by the PWPK fixture, which was also checked with Ancient. CRM2 and CRMS use
+positive streams generated and decoded by an independent Crunch-Mania
+implementation. Their XPK envelopes remain source-derived and are labelled
+accordingly.
 
 FS-UAE runs behind Xvfb with Mesa software rendering, so oracle generation
 does not map a window onto the host desktop.

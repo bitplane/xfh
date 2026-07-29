@@ -1,3 +1,5 @@
+import bz2
+import zlib
 from pathlib import Path
 
 import pytest
@@ -66,6 +68,12 @@ def test_initial_codec_set() -> None:
         "LHLB",
         "SDHC",
         "CYB2",
+        "BZP2",
+        "GZIP",
+        "IMPL",
+        "PWPK",
+        "CRM2",
+        "CRMS",
     } <= supported_codecs()
 
 
@@ -109,6 +117,12 @@ def test_initial_codec_set() -> None:
         ("LHLB", b""),
         ("SDHC", b""),
         ("CYB2", b""),
+        ("BZP2", b""),
+        ("GZIP", b""),
+        ("IMPL", b""),
+        ("PWPK", b""),
+        ("CRM2", b""),
+        ("CRMS", b""),
     ],
 )
 def test_new_codecs_reject_malformed_streams(codec: str, payload: bytes) -> None:
@@ -292,6 +306,18 @@ def test_sdhc_raw_delta_modes(mode: int, payload: bytes, expected: bytes) -> Non
 def test_sdhc_nested_xpk_stream() -> None:
     nested = xpkf("NONE", [(0, b"\x01\x01\x01\x01", 4)], initial=b"\x01\x01\x01\x01")
     assert decode("SDHC", b"\x80\0" + nested, 4) == b"\x01\x02\x03\x04"
+
+
+@pytest.mark.parametrize(
+    ("codec", "payload"),
+    [
+        ("BZP2", bz2.compress(bytes(128))),
+        ("GZIP", zlib.compress(bytes(128))),
+    ],
+)
+def test_standard_streams_reject_output_beyond_declared_size(codec: str, payload: bytes) -> None:
+    with pytest.raises(CorruptDataError, match="invalid"):
+        decode(codec, payload, 8)
 
 
 def test_blzw_width_change_and_dictionary_reset() -> None:

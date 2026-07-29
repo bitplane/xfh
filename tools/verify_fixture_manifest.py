@@ -40,11 +40,18 @@ PUBLIC_CODECS = {
     "SLZ3",
     "SDHC",
     "LHLB",
+    "BZP2",
+    "GZIP",
+    "IMPL",
+    "PWPK",
+    "CRM2",
+    "CRMS",
 }
 EVIDENCE = {
     "original-amiga-roundtrip",
     "xfh-decoded",
     "ancient-cross-checked",
+    "independent-cross-checked",
     "source-derived",
     "synthetic-malformed",
 }

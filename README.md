@@ -9,8 +9,9 @@ later `XPKF` container, the DiskExpander 2.1 wrapper, and pure-Python `NONE`,
 `NUKE`, `DUKE`, `FAST`, `RAKE`, `HUFF`, `SHRI`, `CBR0`, `RLEN`, `FRLE`,
 `RDCN`, `BLZW`, `DLTA`, `SMPL`, `HFMN`, `MASH`, `SQSH`, `SHR3`, `LZW2`,
 `LZW3`, `LZW4`, `LZW5`, `ACCA`, `ARTM`, `FBR2`, `ILZR`, `ZENO`, `LZBS`,
-`SLZ3`, `TDCS`, `LHLB`, `SDHC`, and `CYB2` decompression. DiskExpander NUKE
-recovery is proven against a known packed/plain pair.
+`SLZ3`, `TDCS`, `LHLB`, `SDHC`, `CYB2`, `BZP2`, `GZIP`, `IMPL`, `PWPK`,
+`CRM2`, and `CRMS` decompression. DiskExpander NUKE recovery is proven against
+a known packed/plain pair.
 Historical compatibility identifiers `CBR1` (CBR0) and `FRHT` (RAKE) are
 accepted as exact stream-format aliases.
 
