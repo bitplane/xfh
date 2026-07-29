@@ -40,6 +40,26 @@ def test_lzcb_oracle_rejects_every_truncation() -> None:
             decode("LZCB", payload[:length], 1024)
 
 
+@pytest.mark.parametrize(
+    ("fixture", "codec"),
+    [
+        ("ppmq050-repeat1k.hex", "PPMQ"),
+        ("sasc000-repeat1k.hex", "SASC"),
+        ("sasc034-repeat1k.hex", "SASC"),
+        ("shsc000-repeat1k.hex", "SHSC"),
+        ("shsc034-repeat1k.hex", "SHSC"),
+    ],
+)
+def test_context_codec_oracles_reject_every_truncation(fixture: str, codec: str) -> None:
+    root = Path(__file__).parent / "fixtures" / "oracle"
+    packed = bytes.fromhex((root / fixture).read_text())
+    payload = parse(packed, DEFAULT_LIMITS).chunks[0].payload
+    assert decode(codec, payload, 1024) == (b"Amiga XPK!" * 128)[:1024]
+    for length in range(len(payload)):
+        with pytest.raises(CorruptDataError):
+            decode(codec, payload[:length], 1024)
+
+
 def test_initial_codec_set() -> None:
     assert {
         "NONE",
@@ -73,6 +93,9 @@ def test_initial_codec_set() -> None:
         "ZENO",
         "LZBS",
         "LZCB",
+        "PPMQ",
+        "SASC",
+        "SHSC",
         "SLZ3",
         "TDCS",
         "LHLB",
@@ -123,6 +146,9 @@ def test_initial_codec_set() -> None:
         ("ZENO", b"\0" * 6),
         ("LZBS", b""),
         ("LZCB", b""),
+        ("PPMQ", b""),
+        ("SASC", b""),
+        ("SHSC", b""),
         ("SLZ3", b""),
         ("TDCS", b""),
         ("LHLB", b""),

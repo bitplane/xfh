@@ -82,8 +82,8 @@ Path("recovered-file").write_bytes(plain)
 `ACCA`, `ARTM`, `BLZW`, `BZP2`, `CBR0`, `CBR1`, `CRM2`, `CRMS`, `CYB2`,
 `DLTA`, `DUKE`, `FAST`, `FBR2`, `FRHT`, `FRLE`, `GZIP`, `HFMN`, `HUFF`,
 `ILZR`, `IMPL`, `LHLB`, `LZBS`, `LZCB`, `LZW2`, `LZW3`, `LZW4`, `LZW5`, `MASH`,
-`NONE`, `NUKE`, `PWPK`, `RAKE`, `RDCN`, `RLEN`, `SDHC`, `SHR3`, `SHRI`,
-`SLZ3`, `SMPL`, `SQSH`, `TDCS`, and `ZENO`.
+`NONE`, `NUKE`, `PPMQ`, `PWPK`, `RAKE`, `RDCN`, `RLEN`, `SASC`, `SDHC`,
+`SHR3`, `SHRI`, `SHSC`, `SLZ3`, `SMPL`, `SQSH`, `TDCS`, and `ZENO`.
 
 `CBR1` is an alias for `CBR0`; `FRHT` is an alias for `RAKE`.
 Password-protected streams are detected but are not currently decoded.

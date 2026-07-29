@@ -7,46 +7,13 @@ Copyright (c) 2017-2026 Teemu Suutari, under the BSD 2-Clause License.
 from collections.abc import Callable
 
 from xfh.codecs import register
+from xfh.codecs._range import RangeDecoder
 from xfh.codecs._streams import BitReader, ByteInput, copy_forward
 from xfh.errors import CorruptDataError
 
-_MASK16 = 0xFFFF
-
-
-class _RangeDecoder:
-    def __init__(self, bits: BitReader):
-        self.bits = bits
-        self.low = 0
-        self.high = _MASK16
-        self.stream = bits.read(16)
-
-    def decode(self, total: int) -> int:
-        if not total:
-            raise CorruptDataError("invalid LZCB probability total")
-        return ((self.stream - self.low + 1) * total - 1) // (self.high - self.low + 1)
-
-    def scale(self, new_low: int, new_high: int, total: int) -> None:
-        if not 0 <= new_low < new_high <= total:
-            raise CorruptDataError("invalid LZCB probability range")
-        interval = self.high - self.low + 1
-        self.high = (interval * new_high) // total + self.low - 1
-        self.low = (interval * new_low) // total + self.low
-        while True:
-            if self.high < 0x8000:
-                decrement = 0
-            elif self.low >= 0x8000:
-                decrement = 0x8000
-            elif self.low >= 0x4000 and self.high < 0xC000:
-                decrement = 0x4000
-            else:
-                break
-            self.low = ((self.low - decrement) << 1) & _MASK16
-            self.high = (((self.high - decrement) << 1) | 1) & _MASK16
-            self.stream = (((self.stream - decrement) << 1) | self.bits.read(1)) & _MASK16
-
 
 class _FrequencyDecoder:
-    def __init__(self, decoder: _RangeDecoder, symbol_limit: int):
+    def __init__(self, decoder: RangeDecoder, symbol_limit: int):
         self.decoder = decoder
         self.frequencies = [0] * (symbol_limit + 1)
         self.threshold = 1
@@ -101,7 +68,7 @@ def decompress_lzcb(payload: bytes, output_size: int, previous: bytes = b"") -> 
     # overrun. Supplying explicit zero padding keeps reads bounded in Python.
     source = ByteInput(payload + bytes(7))
     bits = BitReader(source.word, 32)
-    decoder = _RangeDecoder(bits)
+    decoder = RangeDecoder(bits)
 
     def uniform(limit: int) -> int:
         value = decoder.decode(limit)

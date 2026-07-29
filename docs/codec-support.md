@@ -1,6 +1,6 @@
 # Codec support and evidence
 
-`xfh` currently recognizes 42 XPK identifiers. “Amiga pack” means at least one
+`xfh` currently recognizes 45 XPK identifiers. “Amiga pack” means at least one
 fixture was created and unpacked by the original Amiga libraries under
 headless UAE, then decoded byte-exactly by Python. “Derived” means the decoder
 is covered by source-derived or transformed fixtures but an original packer
@@ -8,7 +8,7 @@ artifact is not yet available.
 
 | Evidence | Codecs |
 | --- | --- |
-| Original Amiga pack/unpack | ACCA, BLZW, BZP2, CBR0, DLTA, DUKE, FAST, FBR2, FRLE, GZIP, HFMN, HUFF, ILZR, IMPL, LHLB, LZBS, LZCB, LZW2, LZW3, LZW4, LZW5, MASH, NONE, NUKE, RAKE, RDCN, RLEN, SDHC, SHRI, SLZ3, SQSH, ZENO |
+| Original Amiga pack/unpack | ACCA, BLZW, BZP2, CBR0, DLTA, DUKE, FAST, FBR2, FRLE, GZIP, HFMN, HUFF, ILZR, IMPL, LHLB, LZBS, LZCB, LZW2, LZW3, LZW4, LZW5, MASH, NONE, NUKE, PPMQ, RAKE, RDCN, RLEN, SASC, SDHC, SHRI, SHSC, SLZ3, SQSH, ZENO |
 | Exact historical aliases | CBR1, FRHT |
 | Derived or transformed | ARTM, CRM2, CRMS, CYB2, PWPK, SHR3, SMPL, TDCS |
 
@@ -29,13 +29,13 @@ original XPK master library.
 
 ## Preserved but not implemented
 
-The preservation inventory contains 14 additional XPK identifiers. The
+The preservation inventory contains 11 additional XPK identifiers. The
 original libraries were identified by filename, embedded version strings, and
 an `xQuery` run under the isolated headless-UAE oracle.
 
 | Class | Codecs | Notes |
 | --- | --- | --- |
-| Standalone compression | CYB1, DHUF, DMCB, PPMQ, SASC, SHSC | Suitable for pure-Python decoder work |
+| Standalone compression | CYB1, DHUF, DMCB | Require authentic compressed samples |
 | External backend wrappers | ELZX, SLZX | Invoke the separate Amiga `lzx` command |
 | Encryption | BLFH, ENCO, FEAL, IDEA | Require password and encryption API design |
 | Composite | NUID, SHID | Combine NUKE or SHRI with IDEA |
@@ -82,6 +82,7 @@ probes hang the original compressor past the oracle's 120-second limit.
 Without a historical compressed sample, implementing its arithmetic Markov
 decoder would not be verifiable.
 
-LZCB is implemented from its range-coded adaptive LZ stream, with every
-reported mode boundary verified under headless UAE. PPMQ, SASC, and SHSC are
-the remaining standalone candidates.
+LZCB, PPMQ, SASC, and SHSC are implemented from their adaptive range-coded
+streams. Every reported mode boundary was verified under headless UAE; SASC
+and SHSC additionally cover both normal and delta preprocessing. CYB1, DHUF,
+and DMCB are the remaining standalone preservation gaps described above.

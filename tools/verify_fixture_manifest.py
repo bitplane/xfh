@@ -45,6 +45,9 @@ PUBLIC_CODECS = {
     "GZIP",
     "IMPL",
     "PWPK",
+    "PPMQ",
+    "SASC",
+    "SHSC",
     "CRM2",
     "CRMS",
 }
