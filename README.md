@@ -91,7 +91,6 @@ Path("recovered-file").write_bytes(plain)
 `TDCS`, and `ZENO`.
 
 `CBR1` is an alias for `CBR0`; `FRHT` is an alias for `RAKE`.
-`ENCO` and `FEAL` are also supported. BLFH packing modes (14–25, 39–50,
-69–75, and 89–100) remain unsupported; its ECB, OFB, CFB, and CBC encryption
-modes are decoded. These obsolete ciphers are included solely for recovery
-and must not be used to protect new data.
+`ENCO` and `FEAL` are also supported. BLFH's packed and unpacked ECB, OFB,
+CFB, and CBC modes are decoded. These obsolete ciphers are included solely
+for recovery and must not be used to protect new data.

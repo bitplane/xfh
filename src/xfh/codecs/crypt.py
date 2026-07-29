@@ -409,16 +409,72 @@ def _blowfish_encrypt_block(block: bytes, p: list[int], boxes: list[list[int]]) 
     )
 
 
+def _blfh_unpack(data: bytes, output_size: int) -> bytes:
+    if len(data) < 8:
+        raise CorruptDataError("truncated BLFH packed stream")
+    stored_checksum = int.from_bytes(data[-3:-1], "big")
+    if data[-1] != 0:
+        _wrong_password()
+    position = 0
+    output = bytearray()
+    while True:
+        if position + 2 > len(data) - 3:
+            raise CorruptDataError("missing BLFH packed end marker")
+        control = int.from_bytes(data[position : position + 2], "big")
+        position += 2
+        if control & 0x8000:
+            used = control & 0x7FFF
+            if used > 15:
+                raise CorruptDataError("invalid BLFH packed end marker")
+            unused = 15 - used
+            if unused > len(output):
+                raise CorruptDataError("invalid BLFH packed tail")
+            if unused:
+                del output[-unused:]
+            break
+        for bit in range(14, -1, -1):
+            if control & (1 << bit):
+                if position + 2 > len(data) - 3:
+                    raise CorruptDataError("truncated BLFH packed match")
+                match = int.from_bytes(data[position : position + 2], "big")
+                position += 2
+                length = match & 0xF or 16
+                distance = match >> 4 or 4096
+                if distance > len(output):
+                    raise CorruptDataError("invalid BLFH packed distance")
+                for _ in range(length):
+                    if len(output) >= output_size + 15:
+                        raise CorruptDataError("BLFH packed output exceeds its declared size")
+                    output.append(output[-distance])
+            else:
+                if position >= len(data) - 3:
+                    raise CorruptDataError("truncated BLFH packed literal")
+                if len(output) >= output_size + 15:
+                    raise CorruptDataError("BLFH packed output exceeds its declared size")
+                output.append(data[position])
+                position += 1
+    if any(data[position:-3]):
+        raise CorruptDataError("non-zero BLFH packed padding")
+    checksum = (
+        sum(int.from_bytes(data[index : index + 2], "big") for index in range(0, position, 2))
+        & _MASK16
+    )
+    if checksum != stored_checksum:
+        _wrong_password()
+    if len(output) != output_size:
+        raise CorruptDataError("BLFH packed stream produced the wrong size")
+    return bytes(output)
+
+
 @register_encrypted("BLFH")
 def decompress_blfh(payload: bytes, output_size: int, previous: bytes, password: bytes) -> bytes:
-    """Decode uncompressed Blowfish ECB/OFB/CFB/CBC modes from BLFH 2.x."""
+    """Decode Blowfish ECB/OFB/CFB/CBC modes from BLFH 2.x."""
 
     del previous
     if len(payload) < 2 or payload[0] not in (0x14, 0x15):
         raise CorruptDataError("unsupported BLFH chunk version")
     mode = payload[1]
-    packed = 14 <= mode <= 25 or 39 <= mode <= 50 or 69 <= mode <= 75 or 89 <= mode <= 100
-    if packed:
+    if mode > 100:
         raise UnsupportedCodecError("BLFH", mode)
     chained = mode >= 26
     offset = 2
@@ -428,6 +484,13 @@ def decompress_blfh(payload: bytes, output_size: int, previous: bytes, password:
             raise CorruptDataError("truncated BLFH initializer")
         initializer = payload[offset : offset + 8]
         offset += 8
+    packed = False
+    if (len(payload) - offset) % 8 == 1:
+        packing_flag = payload[offset]
+        offset += 1
+        if packing_flag > 1:
+            raise CorruptDataError("invalid BLFH packing flag")
+        packed = packing_flag == 1
     ciphertext = payload[offset:]
     if not ciphertext or len(ciphertext) % 8:
         raise CorruptDataError("invalid BLFH encrypted length")
@@ -435,27 +498,40 @@ def decompress_blfh(payload: bytes, output_size: int, previous: bytes, password:
     blocks = [ciphertext[index : index + 8] for index in range(0, len(ciphertext), 8)]
     output: list[bytes] = []
     state = initializer
-    if mode <= 13:  # ECB
+    if mode < 26:  # ECB
         output = [_blowfish_decrypt_block(block, p, boxes) for block in blocks]
-    elif mode <= 38:  # OFB
+    elif mode < 51:  # OFB
         for block in blocks:
             state = _blowfish_encrypt_block(state, p, boxes)
             output.append(bytes(a ^ b for a, b in zip(block, state, strict=True)))
-    elif mode <= 68:  # CFB
+    elif mode < 76:  # CFB
         for block in blocks:
             stream = _blowfish_encrypt_block(state, p, boxes)
             output.append(bytes(a ^ b for a, b in zip(block, stream, strict=True)))
             state = block
-    elif mode <= 88:  # CBC
+    else:  # CBC
         for block in blocks:
             decoded = _blowfish_decrypt_block(block, p, boxes)
             output.append(bytes(a ^ b for a, b in zip(decoded, state, strict=True)))
             state = block
-    else:
-        raise UnsupportedCodecError("BLFH", mode)
     padded = b"".join(output)
-    if output_size > len(padded) or len(padded) - output_size > 7:
+    if packed:
+        return _blfh_unpack(padded, output_size)
+    # The raw form reserves two checksum bytes and a length marker, then rounds
+    # the whole buffer up to a Blowfish block boundary.
+    expected_padded_size = (output_size + 3 + 7) & ~7
+    if len(padded) != expected_padded_size:
         _wrong_password()
     if not padded or padded[-1] != output_size & 7:
+        _wrong_password()
+    stored_checksum = int.from_bytes(padded[-3:-1], "big")
+    checksum = (
+        sum(
+            int.from_bytes(padded[index : index + 2], "big")
+            for index in range(0, output_size - 1, 2)
+        )
+        & _MASK16
+    )
+    if checksum != stored_checksum:
         _wrong_password()
     return padded[:output_size]

@@ -24,10 +24,19 @@ def test_enco_password_and_checksum() -> None:
         decode("ENCO", payload, len(plain), password=b"wrong")
 
 
-def test_genuine_blfh_cbc_oracle() -> None:
-    path = Path(__file__).parent / "fixtures" / "oracle" / "blfh080-text.hex"
+@pytest.mark.parametrize(
+    ("fixture", "expected"),
+    [
+        ("blfh014-repeat1k.hex", (b"Amiga XPK!" * 128)[:1024]),
+        ("blfh039-repeat1k.hex", (b"Amiga XPK!" * 128)[:1024]),
+        ("blfh069-repeat1k.hex", (b"Amiga XPK!" * 128)[:1024]),
+        ("blfh080-text.hex", b"XFH recovery oracle\r\n" * 4),
+        ("blfh089-repeat1k.hex", (b"Amiga XPK!" * 128)[:1024]),
+    ],
+)
+def test_genuine_blfh_oracles(fixture: str, expected: bytes) -> None:
+    path = Path(__file__).parent / "fixtures" / "oracle" / fixture
     packed = bytes.fromhex(path.read_text())
-    expected = b"XFH recovery oracle\r\n" * 4
     assert xfh.decompress(packed, password="recovery-test") == expected
     with pytest.raises(PasswordRequiredError):
         xfh.decompress(packed)
