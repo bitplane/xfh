@@ -2,12 +2,15 @@ from pathlib import Path
 
 import pytest
 
+import xfh
 from xfh.codecs import decode, supported_codecs
 from xfh.codecs._prefix import PrefixDecoder, variable_length
 from xfh.codecs._streams import BitReader, ByteInput
 from xfh.container import parse
 from xfh.errors import CorruptDataError
 from xfh.limits import DEFAULT_LIMITS
+
+from .helpers import xpkf
 
 
 def test_fast_literal_stream() -> None:
@@ -47,6 +50,11 @@ def test_initial_codec_set() -> None:
         "SQSH",
         "CBR1",
         "FRHT",
+        "SHR3",
+        "LZW2",
+        "LZW3",
+        "LZW4",
+        "LZW5",
     } <= supported_codecs()
 
 
@@ -69,6 +77,16 @@ def test_initial_codec_set() -> None:
         ("HFMN", b""),
         ("MASH", b""),
         ("SQSH", b""),
+        ("SHR3", b""),
+        ("LZW2", b""),
+        ("LZW3", b""),
+        ("LZW4", b""),
+        ("LZW5", b""),
+        ("SHR3", b"\2" + b"\0" * 4),
+        ("LZW2", b"\1\0\0"),
+        ("LZW3", b"\1\0\0"),
+        ("LZW4", b"\x80\0\0"),
+        ("LZW5", b"\x40\0\0"),
     ],
 )
 def test_new_codecs_reject_malformed_streams(codec: str, payload: bytes) -> None:
@@ -128,6 +146,45 @@ def test_new_codec_structural_failures(
 ) -> None:
     with pytest.raises(CorruptDataError, match=message):
         decode(codec, payload, output_size)
+
+
+@pytest.mark.parametrize("codec", ["LZW2", "LZW3"])
+def test_lzw2_and_lzw3_literal_and_match(codec: str) -> None:
+    assert decode(codec, b"\x02A\xff\xff\0", 5) == b"A" * 5
+
+
+def test_lzw4_literal_and_match() -> None:
+    assert decode("LZW4", b"\x40A\xff\xff\0", 4) == b"A" * 4
+
+
+def test_lzw5_all_match_classes() -> None:
+    assert decode("LZW5", b"\x10A\xff\xfe", 5) == b"A" * 5
+    assert decode("LZW5", b"\x20A\xff\xf4", 7) == b"A" * 7
+    assert decode("LZW5", b"\x30A\xff\xff\0", 4) == b"A" * 4
+
+
+def test_shr3_uses_shri_model_without_the_per_chunk_size_header() -> None:
+    root = Path(__file__).parent / "fixtures" / "oracle"
+    packed = bytes.fromhex((root / "shri100-repeat1k.hex").read_text())
+    payload = parse(packed, DEFAULT_LIMITS).chunks[0].payload
+    shr3_payload = payload[:1] + payload[4:]
+    assert decode("SHR3", shr3_payload, 1024) == (b"Amiga XPK!" * 128)[:1024]
+
+
+def test_shr3_continuation_chunks_share_the_adaptive_model() -> None:
+    root = Path(__file__).parent / "fixtures" / "oracle"
+    packed = bytes.fromhex((root / "shri100-repeat64k.hex").read_text())
+    parsed = parse(packed, DEFAULT_LIMITS)
+    chunks = []
+    for chunk in parsed.chunks:
+        if chunk.info.type == 15:
+            continue
+        payload = chunk.payload
+        if chunk.info.type == 1:
+            payload = payload[:1] + payload[4:]
+        chunks.append((chunk.info.type, payload, chunk.info.unpacked_size))
+    shr3 = xpkf("SHR3", chunks, initial=parsed.info.initial)
+    assert xfh.decompress(shr3) == bytes(range(64)) * 1024
 
 
 def test_blzw_width_change_and_dictionary_reset() -> None:

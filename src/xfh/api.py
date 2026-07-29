@@ -40,7 +40,7 @@ def _decompress_parsed(parsed: ParsedFile) -> bytes:
             continue
         if chunk.info.type == 0:
             decoded = chunk.payload
-        elif parsed.info.codec == "SHRI":
+        elif parsed.info.codec in {"SHRI", "SHR3"}:
             from xfh.codecs.shri import decompress_shri_chunk
 
             decoded, shri_state = decompress_shri_chunk(
@@ -48,6 +48,7 @@ def _decompress_parsed(parsed: ParsedFile) -> bytes:
                 chunk.info.unpacked_size,
                 bytes(output),
                 shri_state,
+                shr3=parsed.info.codec == "SHR3",
             )
         else:
             decoded = decode(
@@ -102,7 +103,7 @@ def salvage(
         try:
             if chunk.info.type == 0:
                 decoded = chunk.payload
-            elif parsed.info.codec == "SHRI":
+            elif parsed.info.codec in {"SHRI", "SHR3"}:
                 from xfh.codecs.shri import decompress_shri_chunk
 
                 decoded, shri_state = decompress_shri_chunk(
@@ -110,6 +111,7 @@ def salvage(
                     chunk.info.unpacked_size,
                     bytes(output),
                     shri_state,
+                    shr3=parsed.info.codec == "SHR3",
                 )
             else:
                 decoded = decode(

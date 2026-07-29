@@ -26,7 +26,10 @@ def test_single_byte_mutations_do_not_escape_error_model(data: bytes, value: int
     assert len(result.data) <= 4096
 
 
-@pytest.mark.parametrize("codec", ["DLTA", "SMPL", "HFMN", "MASH", "SQSH"])
+@pytest.mark.parametrize(
+    "codec",
+    ["DLTA", "SMPL", "HFMN", "MASH", "SQSH", "SHR3", "LZW2", "LZW3", "LZW4", "LZW5"],
+)
 @given(st.binary(max_size=96), st.integers(min_value=0, max_value=96))
 @settings(deadline=None, max_examples=100)
 def test_new_codec_inputs_stay_inside_the_public_error_model(

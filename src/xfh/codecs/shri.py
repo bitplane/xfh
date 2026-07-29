@@ -24,20 +24,25 @@ class ShriState:
 
 
 class _ShriDecoder:
-    def __init__(self, data: bytes, output_size: int, state: ShriState | None):
-        if len(data) < 8:
+    def __init__(
+        self, data: bytes, output_size: int, state: ShriState | None, *, shr3: bool = False
+    ):
+        minimum_size = 5 if shr3 else 8
+        if len(data) < minimum_size:
             raise CorruptDataError("truncated SHRI stream")
         version = data[0]
         if version not in (1, 2):
             raise CorruptDataError(f"unsupported SHRI stream version {version}")
 
-        if data[2] & 0x80:
+        if shr3:
+            self.offset = 1
+        elif data[2] & 0x80:
             declared_size = (-int.from_bytes(data[2:6], "big")) & _MASK32
             self.offset = 6
         else:
             declared_size = int.from_bytes(data[2:4], "big")
             self.offset = 4
-        if declared_size != output_size:
+        if not shr3 and declared_size != output_size:
             raise CorruptDataError(
                 f"SHRI stream declares {declared_size} bytes, expected {output_size}"
             )
@@ -275,10 +280,12 @@ def decompress_shri_chunk(
     output_size: int,
     previous: bytes,
     state: ShriState | None,
+    *,
+    shr3: bool = False,
 ) -> tuple[bytes, ShriState]:
     """Decode one SHRI chunk and return its continuation model."""
 
-    decoder = _ShriDecoder(payload, output_size, state)
+    decoder = _ShriDecoder(payload, output_size, state, shr3=shr3)
     return decoder.decompress(output_size, previous), decoder.state()
 
 
@@ -287,4 +294,12 @@ def decompress_shri(payload: bytes, output_size: int, previous: bytes = b"") -> 
     """Decode one independently initialized SHRI chunk."""
 
     decoded, _state = decompress_shri_chunk(payload, output_size, previous, None)
+    return decoded
+
+
+@register("SHR3")
+def decompress_shr3(payload: bytes, output_size: int, previous: bytes = b"") -> bytes:
+    """Decode one independently initialized SHR3 chunk."""
+
+    decoded, _state = decompress_shri_chunk(payload, output_size, previous, None, shr3=True)
     return decoded
