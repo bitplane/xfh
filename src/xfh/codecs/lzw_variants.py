@@ -2,6 +2,10 @@
 
 Despite their names, these formats are control-bit LZ variants rather than
 dictionary-based LZW streams.
+
+Derived from Ancient's LZW2Decompressor, LZW4Decompressor, and
+LZW5Decompressor, Copyright (c) 2017-2025 Teemu Suutari, under the BSD
+2-Clause License.
 """
 
 from xfh.codecs import register

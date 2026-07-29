@@ -55,6 +55,11 @@ def test_initial_codec_set() -> None:
         "LZW3",
         "LZW4",
         "LZW5",
+        "ACCA",
+        "ARTM",
+        "FBR2",
+        "ILZR",
+        "ZENO",
     } <= supported_codecs()
 
 
@@ -87,6 +92,11 @@ def test_initial_codec_set() -> None:
         ("LZW3", b"\1\0\0"),
         ("LZW4", b"\x80\0\0"),
         ("LZW5", b"\x40\0\0"),
+        ("ACCA", b""),
+        ("ARTM", b""),
+        ("FBR2", b"\0"),
+        ("ILZR", b"\0\0"),
+        ("ZENO", b"\0" * 6),
     ],
 )
 def test_new_codecs_reject_malformed_streams(codec: str, payload: bytes) -> None:
@@ -185,6 +195,48 @@ def test_shr3_continuation_chunks_share_the_adaptive_model() -> None:
         chunks.append((chunk.info.type, payload, chunk.info.unpacked_size))
     shr3 = xpkf("SHR3", chunks, initial=parsed.info.initial)
     assert xfh.decompress(shr3) == bytes(range(64)) * 1024
+
+
+def _msb_bytes(fields: list[tuple[int, int]]) -> bytes:
+    bit_string = "".join(f"{value:0{width}b}" for value, width in fields)
+    bit_string += "0" * (-len(bit_string) % 8)
+    return int(bit_string, 2).to_bytes(len(bit_string) // 8, "big")
+
+
+def test_acca_literal_rle_static_and_lz_commands() -> None:
+    assert decode("ACCA", b"\0\0ABC", 3) == b"ABC"
+    assert decode("ACCA", b"\x80\0\xe2", 5) == bytes(5)
+    assert decode("ACCA", b"\x80\0\x2f", 2) == b"\xff\xff"
+    assert decode("ACCA", b"\x10\0ABC\x30\0", 6) == b"ABCABC"
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected"),
+    [
+        (b"d\x01A", b"AA"),
+        (b"d\xfeABC", b"ABC"),
+        (b"C\0\x01A", b"AA"),
+        (b"!\0\0\0\1A", b"AA"),
+    ],
+)
+def test_fbr2_modes(payload: bytes, expected: bytes) -> None:
+    assert decode("FBR2", payload, len(expected)) == expected
+
+
+def test_ilzr_literals_and_absolute_position_match() -> None:
+    fields = [(1, 1), (ord("A"), 8), (1, 1), (ord("B"), 8), (1, 1), (ord("C"), 8)]
+    fields += [(0, 1), (0, 8), (0, 4)]
+    assert decode("ILZR", b"\0\6" + _msb_bytes(fields), 6) == b"ABCABC"
+
+
+def test_zeno_literals_and_unknown_code_case() -> None:
+    header = b"\0\0\0\0\x09\0"
+    assert decode("ZENO", header + _msb_bytes([(65, 9), (66, 9), (67, 9)]), 3) == b"ABC"
+    assert decode("ZENO", header + _msb_bytes([(65, 9), (259, 9)]), 3) == b"AAA"
+
+
+def test_artm_single_symbol_stream() -> None:
+    assert decode("ARTM", b"\0\xff", 1) == b"\xff"
 
 
 def test_blzw_width_change_and_dictionary_reset() -> None:

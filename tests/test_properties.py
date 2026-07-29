@@ -28,7 +28,23 @@ def test_single_byte_mutations_do_not_escape_error_model(data: bytes, value: int
 
 @pytest.mark.parametrize(
     "codec",
-    ["DLTA", "SMPL", "HFMN", "MASH", "SQSH", "SHR3", "LZW2", "LZW3", "LZW4", "LZW5"],
+    [
+        "DLTA",
+        "SMPL",
+        "HFMN",
+        "MASH",
+        "SQSH",
+        "SHR3",
+        "LZW2",
+        "LZW3",
+        "LZW4",
+        "LZW5",
+        "ACCA",
+        "ARTM",
+        "FBR2",
+        "ILZR",
+        "ZENO",
+    ],
 )
 @given(st.binary(max_size=96), st.integers(min_value=0, max_value=96))
 @settings(deadline=None, max_examples=100)

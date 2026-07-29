@@ -64,6 +64,14 @@ reviewable synthetic streams rather than claiming original-packer oracle
 coverage. SHR3 is additionally tested by converting both packed chunks from
 the 64 KiB SHRI continuation fixture to its headerless chunk representation.
 
+`ACCA`, `ARTM`, `FBR2`, `ILZR`, and `ZENO` are implemented from the same
+historical decoder definitions with bounded source-derived streams and
+malformed-input property tests. Their original compressor libraries were also
+absent from the recovered collection; UAE-generated acceptance data remains a
+separate follow-up rather than being implied by the current fixtures. Compact
+source-derived XPK containers for all five were independently decompressed and
+compared byte-for-byte with Ancient 2.3.0.
+
 FS-UAE runs behind Xvfb with Mesa software rendering, so oracle generation
 does not map a window onto the host desktop.
 
