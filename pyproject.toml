@@ -4,13 +4,13 @@ description = "Recover Amiga XPK files, including files written through XFH"
 version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+license = "BSD-2-Clause"
+license-files = ["LICENSE", "NOTICE"]
 authors = [{ name = "xfh contributors" }]
 keywords = ["amiga", "compression", "data-recovery", "xpk", "xfh"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
@@ -24,7 +24,6 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Changelog = "https://github.com/bitplane/xfh/blob/master/CHANGELOG.md"
 Issues = "https://github.com/bitplane/xfh/issues"
 Repository = "https://github.com/bitplane/xfh"
 
@@ -72,7 +71,6 @@ docstring-code-format = true
 
 [tool.flit.sdist]
 include = [
-    "CHANGELOG.md",
     "docs/",
     "tests/",
     "tools/",

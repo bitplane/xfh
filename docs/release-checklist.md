@@ -12,8 +12,6 @@ across repositories.
 - Create the PyPI project/account configuration, enable two-factor
   authentication, and prefer a narrowly scoped trusted publisher or project
   token.
-- Move relevant entries from `Unreleased` to a dated release section in
-  `CHANGELOG.md`, then add a fresh empty `Unreleased` section.
 - Update `project.version` in `pyproject.toml`.
 - Check that the codec support table and recovery limitations match the code.
 - Review `git diff`, `git status`, and the commits included since the previous
@@ -53,7 +51,7 @@ python -m venv ~/tmp/xfh-release-venv
 - Tag the reviewed release commit as `vX.Y.Z` and push the tag.
 - Upload exactly the already-reviewed artifacts to PyPI; do not rebuild between
   TestPyPI and PyPI.
-- Create a GitHub release from the tag using the matching changelog section.
+- Create a GitHub release from the tag with concise release notes.
 
 ## Verify
 
