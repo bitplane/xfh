@@ -43,6 +43,10 @@ Recover a file:
 xfh unpack packed-file recovered-file
 ```
 
+For an encrypted stream, `xfh` prompts securely for its password. In scripts,
+set `XFH_PASSWORD`; passwords are deliberately not accepted as command-line
+arguments because process listings can expose them.
+
 Existing output files are not overwritten unless `--force` is supplied.
 Output is limited to 256 MiB by default; use `--max-output-size` to choose a
 different byte limit.
@@ -66,7 +70,7 @@ import xfh
 
 packed = Path("packed-file").read_bytes()
 info = xfh.inspect(packed)
-plain = xfh.decompress(packed)
+plain = xfh.decompress(packed)  # Add password="..." for an encrypted stream.
 
 print(info.codec, len(plain))
 Path("recovered-file").write_bytes(plain)
@@ -79,12 +83,15 @@ Path("recovered-file").write_bytes(plain)
 
 `xfh` supports these XPK codec identifiers:
 
-`ACCA`, `ARTM`, `BLZW`, `BZP2`, `CBR0`, `CBR1`, `CRM2`, `CRMS`, `CYB2`,
+`ACCA`, `ARTM`, `BLFH`, `BLZW`, `BZP2`, `CBR0`, `CBR1`, `CRM2`, `CRMS`, `CYB2`,
 `DLTA`, `DUKE`, `ELZX`, `FAST`, `FBR2`, `FRHT`, `FRLE`, `GZIP`, `HFMN`, `HUFF`,
-`ILZR`, `IMPL`, `LHLB`, `LZBS`, `LZCB`, `LZW2`, `LZW3`, `LZW4`, `LZW5`,
-`MASH`, `NONE`, `NUKE`, `PPMQ`, `PWPK`, `RAKE`, `RDCN`, `RLEN`, `SASC`,
-`SDHC`, `SHR3`, `SHRI`, `SHSC`, `SLZ3`, `SLZX`, `SMPL`, `SQSH`,
+`IDEA`, `ILZR`, `IMPL`, `LHLB`, `LZBS`, `LZCB`, `LZW2`, `LZW3`, `LZW4`, `LZW5`,
+`MASH`, `NONE`, `NUID`, `NUKE`, `PPMQ`, `PWPK`, `RAKE`, `RDCN`, `RLEN`, `SASC`,
+`SDHC`, `SHID`, `SHR3`, `SHRI`, `SHSC`, `SLZ3`, `SLZX`, `SMPL`, `SQSH`,
 `TDCS`, and `ZENO`.
 
 `CBR1` is an alias for `CBR0`; `FRHT` is an alias for `RAKE`.
-Password-protected streams are detected but are not currently decoded.
+`ENCO` and `FEAL` are also supported. BLFH packing modes (14–25, 39–50,
+69–75, and 89–100) remain unsupported; its ECB, OFB, CFB, and CBC encryption
+modes are decoded. These obsolete ciphers are included solely for recovery
+and must not be used to protect new data.

@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 
 import pytest
-
 import xfh
+
 from tools.verify_fixture_manifest import verify_manifest
 
 
@@ -87,7 +87,8 @@ def test_public_oracle_fixtures() -> None:
     for fixture in manifest["fixtures"]:
         packed = bytes.fromhex((root / fixture["packed"]["path"]).read_text())
         expected = bytes.fromhex((root / fixture["unpacked"]["path"]).read_text())
-        assert xfh.decompress(packed) == expected
+        password = "recovery-test" if fixture["codec"] == "BLFH" else None
+        assert xfh.decompress(packed, password=password) == expected
 
 
 def test_manifest_covers_every_compact_public_xpk_fixture() -> None:

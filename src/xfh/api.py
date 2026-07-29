@@ -30,9 +30,28 @@ def inspect(data: bytes | bytearray | memoryview, *, limits: Limits = DEFAULT_LI
     return parse(_bytes(data), limits).info
 
 
-def _decompress_parsed(parsed: ParsedFile) -> bytes:
-    if parsed.info.flags & 2:
-        raise PasswordRequiredError("password-protected XPK streams are not implemented")
+def _password_bytes(password: str | bytes | None) -> bytes | None:
+    if password is None:
+        return None
+    if isinstance(password, bytes):
+        value = password
+    elif isinstance(password, str):
+        try:
+            value = password.encode("latin-1")
+        except UnicodeEncodeError as error:
+            raise ValueError(
+                "password must contain only Amiga byte values U+0001..U+00FF"
+            ) from error
+    else:
+        raise TypeError("password must be str, bytes, or None")
+    if b"\0" in value:
+        raise ValueError("password cannot contain a NUL byte")
+    return value
+
+
+def _decompress_parsed(parsed: ParsedFile, password: bytes | None = None) -> bytes:
+    if parsed.info.flags & 2 and password is None:
+        raise PasswordRequiredError("password-protected XPK stream needs a password")
     output = bytearray()
     shri_state = None
     for chunk in parsed.chunks:
@@ -40,11 +59,17 @@ def _decompress_parsed(parsed: ParsedFile) -> bytes:
             continue
         if chunk.info.type == 0:
             decoded = chunk.payload
-        elif parsed.info.codec in {"SHRI", "SHR3"}:
+        elif parsed.info.codec in {"SHRI", "SHR3", "SHID"}:
             from xfh.codecs.shri import decompress_shri_chunk
 
+            payload = chunk.payload
+            if parsed.info.codec == "SHID":
+                from xfh.codecs.crypt import decrypt_shid
+
+                assert password is not None
+                payload = decrypt_shid(payload, password)
             decoded, shri_state = decompress_shri_chunk(
-                chunk.payload,
+                payload,
                 chunk.info.unpacked_size,
                 bytes(output),
                 shri_state,
@@ -56,6 +81,7 @@ def _decompress_parsed(parsed: ParsedFile) -> bytes:
                 chunk.payload,
                 chunk.info.unpacked_size,
                 bytes(output),
+                password=password,
             )
         if len(decoded) != chunk.info.unpacked_size:
             raise CorruptDataError(
@@ -67,7 +93,11 @@ def _decompress_parsed(parsed: ParsedFile) -> bytes:
         raise CorruptDataError(
             f"stream produced {len(output)} bytes, expected {parsed.info.unpacked_size}"
         )
-    if parsed.info.initial and output[: len(parsed.info.initial)] != parsed.info.initial:
+    if (
+        parsed.info.initial
+        and not parsed.info.flags & 2
+        and output[: len(parsed.info.initial)] != parsed.info.initial
+    ):
         raise CorruptDataError("decompressed data does not match XPKF initial bytes")
     return bytes(output)
 
@@ -80,12 +110,15 @@ def decompress(
 ) -> bytes:
     """Strictly decompress one complete stream."""
 
-    del password
-    return _decompress_parsed(parse(_bytes(data), limits))
+    password_value = _password_bytes(password)
+    return _decompress_parsed(parse(_bytes(data), limits), password_value)
 
 
 def salvage(
-    data: bytes | bytearray | memoryview, *, limits: Limits = DEFAULT_LIMITS
+    data: bytes | bytearray | memoryview,
+    *,
+    password: str | bytes | None = None,
+    limits: Limits = DEFAULT_LIMITS,
 ) -> RecoveryResult:
     """Recover verified chunks until the first decoding failure."""
 
@@ -95,6 +128,10 @@ def salvage(
     except XfhError as error:
         return RecoveryResult(b"", False, (RecoveryIssue(0, str(error)),))
     output = bytearray()
+    password_value = _password_bytes(password)
+    if parsed.info.flags & 2 and password_value is None:
+        error = PasswordRequiredError("password-protected XPK stream needs a password")
+        return RecoveryResult(b"", False, (RecoveryIssue(0, str(error)),))
     shri_state = None
     issues: list[RecoveryIssue] = []
     for chunk in parsed.chunks:
@@ -103,11 +140,17 @@ def salvage(
         try:
             if chunk.info.type == 0:
                 decoded = chunk.payload
-            elif parsed.info.codec in {"SHRI", "SHR3"}:
+            elif parsed.info.codec in {"SHRI", "SHR3", "SHID"}:
                 from xfh.codecs.shri import decompress_shri_chunk
 
+                payload = chunk.payload
+                if parsed.info.codec == "SHID":
+                    from xfh.codecs.crypt import decrypt_shid
+
+                    assert password_value is not None
+                    payload = decrypt_shid(payload, password_value)
                 decoded, shri_state = decompress_shri_chunk(
-                    chunk.payload,
+                    payload,
                     chunk.info.unpacked_size,
                     bytes(output),
                     shri_state,
@@ -119,6 +162,7 @@ def salvage(
                     chunk.payload,
                     chunk.info.unpacked_size,
                     bytes(output),
+                    password=password_value,
                 )
             if len(decoded) != chunk.info.unpacked_size:
                 raise CorruptDataError("decoded chunk has the wrong size")
@@ -146,9 +190,8 @@ def decompress_file(
         raise FileExistsError(destination_path)
     data = source_path.read_bytes()
     parsed = parse(data, limits)
-    output = _decompress_parsed(parsed)
+    output = _decompress_parsed(parsed, _password_bytes(password))
     _write_atomic(destination_path, output, overwrite=overwrite)
-    del password
     return parsed.info
 
 

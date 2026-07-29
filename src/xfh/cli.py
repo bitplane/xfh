@@ -1,8 +1,11 @@
 """Command-line interface."""
 
 import argparse
+import getpass
 import json
+import os
 import sys
+import warnings
 from dataclasses import asdict
 from enum import Enum
 from pathlib import Path
@@ -10,6 +13,31 @@ from pathlib import Path
 from xfh.api import _write_atomic, decompress_file, inspect, salvage
 from xfh.errors import UnsupportedCodecError, XfhError
 from xfh.limits import Limits
+
+
+def _password_for(data: bytes, limits: Limits) -> str | None:
+    """Obtain a password only when the stream declares that it needs one."""
+
+    if not inspect(data, limits=limits).flags & 2:
+        return None
+    if "XFH_PASSWORD" in os.environ:
+        return os.environ["XFH_PASSWORD"]
+    if not sys.stdin.isatty():
+        from xfh.errors import PasswordRequiredError
+
+        raise PasswordRequiredError(
+            "password required; set XFH_PASSWORD when no terminal is available"
+        )
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", getpass.GetPassWarning)
+        try:
+            return getpass.getpass("XPK password: ")
+        except (EOFError, getpass.GetPassWarning) as error:
+            from xfh.errors import PasswordRequiredError
+
+            raise PasswordRequiredError(
+                "password required; set XFH_PASSWORD when secure prompting is unavailable"
+            ) from error
 
 
 def _json_default(value: object) -> object:
@@ -63,12 +91,14 @@ def main(argv: list[str] | None = None) -> int:
         if arguments.command == "verify":
             from xfh.api import decompress
 
-            decompress(arguments.file.read_bytes(), limits=limits)
+            data = arguments.file.read_bytes()
+            decompress(data, password=_password_for(data, limits), limits=limits)
             print(f"{arguments.file}: verified")
             return 0
 
         if arguments.salvage:
-            result = salvage(arguments.file.read_bytes(), limits=limits)
+            data = arguments.file.read_bytes()
+            result = salvage(data, password=_password_for(data, limits), limits=limits)
             _write_atomic(arguments.output, result.data, overwrite=arguments.force)
             report = {
                 "complete": result.complete,
@@ -87,6 +117,7 @@ def main(argv: list[str] | None = None) -> int:
             arguments.file,
             arguments.output,
             overwrite=arguments.force,
+            password=_password_for(arguments.file.read_bytes(), limits),
             limits=limits,
         )
         return 0

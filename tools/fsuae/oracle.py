@@ -101,6 +101,21 @@ MODE_RANGES = {
     ),
     "IMPL": ((0, 10), (11, 30), (31, 50), (51, 75), (76, 98), (99, 100)),
     "SLZX": ((0, 20), (21, 40), (41, 60), (61, 80), (81, 100)),
+    "ENCO": ((0, 100),),
+    "FEAL": ((0, 4), (5, 8), (9, 16), (17, 32), (33, 100)),
+    "IDEA": ((0, 25), (26, 50), (51, 75), (76, 100)),
+    "BLFH": (
+        (0, 13),
+        (14, 25),
+        (26, 38),
+        (39, 50),
+        (51, 68),
+        (69, 75),
+        (76, 88),
+        (89, 100),
+    ),
+    "NUID": ((0, 100),),
+    "SHID": ((0, 14), (15, 28), (29, 42), (43, 56), (57, 70), (71, 84), (85, 100)),
 }
 DEFAULT_MODES = {
     "NONE": 50,
@@ -145,7 +160,15 @@ DEFAULT_MODES = {
     "GZIP": 65,
     "IMPL": 100,
     "SLZX": 80,
+    "ENCO": 50,
+    "FEAL": 16,
+    "IDEA": 76,
+    "BLFH": 80,
+    "NUID": 50,
+    "SHID": 100,
 }
+ENCRYPTED_CODECS = {"ENCO", "FEAL", "IDEA", "BLFH", "NUID", "SHID"}
+ORACLE_PASSWORD = "recovery-test"
 EXHAUSTIVE_MODE_CODECS = {"NONE", "NUKE", "FAST", "RAKE", "HUFF", "SHRI"}
 UNSAFE_CASES = {
     ("DLTA", "one"): "original packer hangs on a one-byte input",
@@ -377,15 +400,25 @@ def render_matrix(
                 result_path = workspace / "shared" / "outputs" / f"{identifier}.unpacked"
                 if resume and result_path.is_file():
                     continue
+                pack_command = (
+                    f"C:xPack RAM:matrix/source METHOD {codec}.{mode} "
+                    f"PASSWORD {ORACLE_PASSWORD} MINSIZE 0 SUFFIX .xpk FORCE QUIET"
+                    if codec in ENCRYPTED_CODECS
+                    else f"C:xpk -f -s -m {codec}.{mode} RAM:matrix/source"
+                )
+                unpack_command = (
+                    f"C:xPack RAM:matrix/source.xpk PASSWORD {ORACLE_PASSWORD} FORCE QUIET"
+                    if codec in ENCRYPTED_CODECS
+                    else "C:xpk -u -s RAM:matrix/source.xpk"
+                )
                 lines.extend(
                     (
                         f"Copy SHARED:inputs/{vector} RAM:matrix/source QUIET",
-                        f"C:xpk -f -s -m {codec}.{mode} RAM:matrix/source "
-                        f">SHARED:outputs/{identifier}.log",
+                        f"{pack_command} >SHARED:outputs/{identifier}.log",
                         f'Echo "{identifier} packrc=$RC" >>SHARED:outputs/matrix-status.txt',
                         f"Copy RAM:matrix/source.xpk SHARED:outputs/{identifier}.packed QUIET",
                         "Delete RAM:matrix/source QUIET",
-                        f"C:xpk -u -s RAM:matrix/source.xpk >>SHARED:outputs/{identifier}.log",
+                        f"{unpack_command} >>SHARED:outputs/{identifier}.log",
                         f'Echo "{identifier} unpackrc=$RC" >>SHARED:outputs/matrix-status.txt',
                         f"Copy RAM:matrix/source.xpk SHARED:outputs/{identifier}.unpacked QUIET",
                         "Delete RAM:matrix/source.xpk QUIET",
@@ -488,7 +521,10 @@ def verify_python(workspace: Path) -> None:
         if "excluded_reason" in case or not packed.is_file() or not unpacked.is_file():
             continue
         try:
-            decoded = xfh.decompress(packed.read_bytes())
+            decoded = xfh.decompress(
+                packed.read_bytes(),
+                password=ORACLE_PASSWORD if case["codec"] in ENCRYPTED_CODECS else None,
+            )
             matches = decoded == unpacked.read_bytes()
             error = None
         except xfh.XfhError as exception:

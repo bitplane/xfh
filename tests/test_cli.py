@@ -58,3 +58,24 @@ def test_salvage_writes_report_for_a_decode_failure(tmp_path: Path) -> None:
     )
     assert output.read_bytes() == b""
     assert json.loads(report.read_text())["complete"] is False
+
+
+def test_encrypted_stream_uses_environment_password(tmp_path: Path, monkeypatch, capsys) -> None:
+    fixture = Path(__file__).parent / "fixtures" / "oracle" / "blfh080-text.hex"
+    source = tmp_path / "encrypted.xpk"
+    source.write_bytes(bytes.fromhex(fixture.read_text()))
+    monkeypatch.setenv("XFH_PASSWORD", "recovery-test")
+    assert main(["verify", str(source)]) == 0
+    assert "verified" in capsys.readouterr().out
+
+
+def test_encrypted_stream_never_prompts_without_a_terminal(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    fixture = Path(__file__).parent / "fixtures" / "oracle" / "blfh080-text.hex"
+    source = tmp_path / "encrypted.xpk"
+    source.write_bytes(bytes.fromhex(fixture.read_text()))
+    monkeypatch.delenv("XFH_PASSWORD", raising=False)
+    monkeypatch.setattr("sys.stdin.isatty", lambda: False)
+    assert main(["verify", str(source)]) == 1
+    assert "set XFH_PASSWORD" in capsys.readouterr().err

@@ -2,10 +2,12 @@
 
 from collections.abc import Callable
 
-from xfh.errors import UnsupportedCodecError
+from xfh.errors import PasswordRequiredError, UnsupportedCodecError
 
 Decoder = Callable[[bytes, int, bytes], bytes]
+EncryptedDecoder = Callable[[bytes, int, bytes, bytes], bytes]
 _DECODERS: dict[str, Decoder] = {}
+_ENCRYPTED_DECODERS: dict[str, EncryptedDecoder] = {}
 
 
 def register(codec: str) -> Callable[[Decoder], Decoder]:
@@ -18,9 +20,31 @@ def register(codec: str) -> Callable[[Decoder], Decoder]:
     return decorator
 
 
-def decode(codec: str, payload: bytes, output_size: int, previous: bytes = b"") -> bytes:
+def register_encrypted(codec: str) -> Callable[[EncryptedDecoder], EncryptedDecoder]:
+    """Register a password-dependent decoder."""
+
+    def decorator(function: EncryptedDecoder) -> EncryptedDecoder:
+        _ENCRYPTED_DECODERS[codec] = function
+        return function
+
+    return decorator
+
+
+def decode(
+    codec: str,
+    payload: bytes,
+    output_size: int,
+    previous: bytes = b"",
+    *,
+    password: bytes | None = None,
+) -> bytes:
     """Decode one packed XPK chunk."""
 
+    encrypted = _ENCRYPTED_DECODERS.get(codec)
+    if encrypted is not None:
+        if password is None:
+            raise PasswordRequiredError("password-protected XPK stream needs a password")
+        return encrypted(payload, output_size, previous, password)
     try:
         decoder = _DECODERS[codec]
     except KeyError as error:
@@ -31,13 +55,14 @@ def decode(codec: str, payload: bytes, output_size: int, previous: bytes = b"") 
 def supported_codecs() -> frozenset[str]:
     """Return codec identifiers implemented by this build."""
 
-    return frozenset(_DECODERS)
+    return frozenset(_DECODERS | _ENCRYPTED_DECODERS)
 
 
 from xfh.codecs import acca as _acca  # noqa: E402,F401
 from xfh.codecs import artm as _artm  # noqa: E402,F401
 from xfh.codecs import blzw as _blzw  # noqa: E402,F401
 from xfh.codecs import crm as _crm  # noqa: E402,F401
+from xfh.codecs import crypt as _crypt  # noqa: E402,F401
 from xfh.codecs import dlta as _dlta  # noqa: E402,F401
 from xfh.codecs import fast as _fast  # noqa: E402,F401
 from xfh.codecs import fbr2 as _fbr2  # noqa: E402,F401

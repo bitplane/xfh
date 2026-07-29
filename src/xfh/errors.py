@@ -27,5 +27,9 @@ class PasswordRequiredError(XfhError):
     """The input is encrypted and needs a password."""
 
 
+class IncorrectPasswordError(XfhError):
+    """The supplied password cannot decrypt the input."""
+
+
 class ResourceLimitError(XfhError):
     """The stream exceeds a configured recovery safety limit."""

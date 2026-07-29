@@ -12,6 +12,7 @@ MAX_PUBLIC_ARTIFACT_SIZE = 64 * 1024
 PROHIBITED_SUFFIXES = {".adf", ".hdf", ".img", ".library", ".rom"}
 ARTIFACT_FIELDS = ("input", "packed", "unpacked")
 PUBLIC_CODECS = {
+    "BLFH",
     "NONE",
     "NUKE",
     "DUKE",

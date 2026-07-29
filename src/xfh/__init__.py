@@ -3,6 +3,7 @@
 from xfh.api import decompress, decompress_file, detect, inspect, salvage
 from xfh.errors import (
     CorruptDataError,
+    IncorrectPasswordError,
     InvalidFormatError,
     PasswordRequiredError,
     ResourceLimitError,
@@ -17,6 +18,7 @@ __all__ = [
     "CorruptDataError",
     "FileFormat",
     "FileInfo",
+    "IncorrectPasswordError",
     "InvalidFormatError",
     "Limits",
     "PasswordRequiredError",

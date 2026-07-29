@@ -42,8 +42,8 @@ an `xQuery` run under the isolated headless-UAE oracle.
 | Class | Codecs | Notes |
 | --- | --- | --- |
 | Standalone compression | CYB1, DHUF, DMCB | Require authentic compressed samples |
-| Encryption | BLFH, ENCO, FEAL, IDEA | Require password and encryption API design |
-| Composite | NUID, SHID | Combine NUKE or SHRI with IDEA |
+| Encryption | ENCO, FEAL, IDEA; BLFH non-packing modes | Password-aware pure-Python decoders |
+| Composite | NUID, SHID | IDEA followed by the existing NUKE or SHRI decoder |
 
 The embedded versions and original-library packing modes are:
 
@@ -63,9 +63,9 @@ The embedded versions and original-library packing modes are:
 | SHID | 1.0 | 100 | 0–14, 15–28, 29–42, 43–56, 57–70, 71–84, 85–100 |
 | SHSC | 1.3 | 0 | 0–33 normal, 34–66 delta, 67–100 best |
 
-ENCO, FEAL, and IDEA identify themselves to `xQuery` but do not expose normal
-packing-mode metadata. They are deliberately deferred with BLFH, NUID, and
-SHID until password handling is designed.
+ENCO, FEAL, IDEA, NUID, and SHID are implemented. BLFH's ECB, OFB, CFB, and
+CBC modes are implemented; its four optional packing ranges are still
+unsupported. All encryption support is for historical recovery only.
 
 The seven standalone identifiers are not equally reproducible. The preserved
 CYB1 1.0 library is decrunch-only: attempts to pack through the original XPK
