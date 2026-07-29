@@ -36,6 +36,9 @@ PUBLIC_CODECS = {
     "LZW4",
     "LZW5",
     "ZENO",
+    "LZBS",
+    "SLZ3",
+    "SDHC",
 }
 EVIDENCE = {
     "original-amiga-roundtrip",

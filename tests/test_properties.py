@@ -44,6 +44,12 @@ def test_single_byte_mutations_do_not_escape_error_model(data: bytes, value: int
         "FBR2",
         "ILZR",
         "ZENO",
+        "LZBS",
+        "SLZ3",
+        "TDCS",
+        "LHLB",
+        "SDHC",
+        "CYB2",
     ],
 )
 @given(st.binary(max_size=96), st.integers(min_value=0, max_value=96))

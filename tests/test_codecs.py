@@ -60,6 +60,12 @@ def test_initial_codec_set() -> None:
         "FBR2",
         "ILZR",
         "ZENO",
+        "LZBS",
+        "SLZ3",
+        "TDCS",
+        "LHLB",
+        "SDHC",
+        "CYB2",
     } <= supported_codecs()
 
 
@@ -97,6 +103,12 @@ def test_initial_codec_set() -> None:
         ("FBR2", b"\0"),
         ("ILZR", b"\0\0"),
         ("ZENO", b"\0" * 6),
+        ("LZBS", b""),
+        ("SLZ3", b""),
+        ("TDCS", b""),
+        ("LHLB", b""),
+        ("SDHC", b""),
+        ("CYB2", b""),
     ],
 )
 def test_new_codecs_reject_malformed_streams(codec: str, payload: bytes) -> None:
@@ -237,6 +249,49 @@ def test_zeno_literals_and_unknown_code_case() -> None:
 
 def test_artm_single_symbol_stream() -> None:
     assert decode("ARTM", b"\0\xff", 1) == b"\xff"
+
+
+def test_lzbs_literal_stream() -> None:
+    fields = []
+    for value in b"ABC":
+        fields.extend(((0, 1), (int(f"{value:08b}"[::-1], 2), 8)))
+    assert decode("LZBS", b"\x0c" + _msb_bytes(fields), 3) == b"ABC"
+
+
+def test_slz3_literal_and_match_stream() -> None:
+    assert decode("SLZ3", b"\x10ABC\x01\x03", 6) == b"ABCABC"
+
+
+def test_tdcs_literal_and_match_stream() -> None:
+    assert decode("TDCS", b"\x01\0\0\0ABC\xff\xf4", 6) == b"ABCABC"
+
+
+def test_lhlb_initial_adaptive_tree_literal() -> None:
+    # The initial nine-bit path for symbol 65 is 111000111.
+    assert decode("LHLB", b"\xe3\x80", 1) == b"A"
+
+
+def test_cyb2_wraps_an_inner_codec_payload() -> None:
+    assert decode("CYB2", b"NONE\0d\0\0\0\0ABC", 3) == b"ABC"
+
+
+@pytest.mark.parametrize(
+    ("mode", "payload", "expected"),
+    [
+        (0, b"\x01\x01\x01\x01", b"\x01\x02\x03\x04"),
+        (1, b"\x01\x01\x01\x01", b"\x01\x03\x06\x0a"),
+        (2, b"\0\x01\0\x01", b"\0\x01\0\x02"),
+        (3, b"\0\x01\0\x01", b"\0\x01\0\x03"),
+        (10, b"\0\x01\0\x02\0\x01\0\x02", b"\0\x01\0\x02\0\x02\0\x04"),
+    ],
+)
+def test_sdhc_raw_delta_modes(mode: int, payload: bytes, expected: bytes) -> None:
+    assert decode("SDHC", mode.to_bytes(2, "big") + payload, len(payload)) == expected
+
+
+def test_sdhc_nested_xpk_stream() -> None:
+    nested = xpkf("NONE", [(0, b"\x01\x01\x01\x01", 4)], initial=b"\x01\x01\x01\x01")
+    assert decode("SDHC", b"\x80\0" + nested, 4) == b"\x01\x02\x03\x04"
 
 
 def test_blzw_width_change_and_dictionary_reset() -> None:

@@ -43,6 +43,8 @@ from xfh.codecs import fbr2 as _fbr2  # noqa: E402,F401
 from xfh.codecs import hfmn as _hfmn  # noqa: E402,F401
 from xfh.codecs import huff as _huff  # noqa: E402,F401
 from xfh.codecs import ilzr as _ilzr  # noqa: E402,F401
+from xfh.codecs import lhlb as _lhlb  # noqa: E402,F401
+from xfh.codecs import lz_small as _lz_small  # noqa: E402,F401
 from xfh.codecs import lzw_variants as _lzw_variants  # noqa: E402,F401
 from xfh.codecs import mash as _mash  # noqa: E402,F401
 from xfh.codecs import none as _none  # noqa: E402,F401
@@ -53,4 +55,5 @@ from xfh.codecs import rle as _rle  # noqa: E402,F401
 from xfh.codecs import shri as _shri  # noqa: E402,F401
 from xfh.codecs import smpl as _smpl  # noqa: E402,F401
 from xfh.codecs import sqsh as _sqsh  # noqa: E402,F401
+from xfh.codecs import wrappers as _wrappers  # noqa: E402,F401
 from xfh.codecs import zeno as _zeno  # noqa: E402,F401

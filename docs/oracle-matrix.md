@@ -19,6 +19,9 @@ private files, logs, and the complete workspace are not distributed.
 | HFMN | 0 | 0–100 |
 | MASH | 100 | 0–100 |
 | SQSH | 100 | 0–100 |
+| LZBS | 100 | 0, 1–10, 11–20, 21–30, 31–40, 41–50, 51–60, 61–70, 71–80, 81–90, 91–100 |
+| SLZ3 | 100 | 0–100 |
+| SDHC | 50 | 0–7, 8–15, 16–23, 24–31, 32–39, 40–47, 48–55, 56–63, 64–71, 72–79, 80–87, 88–100 |
 
 The matrix exercised every numeric mode on a canonical text vector and every
 range boundary/default on deterministic pattern and size vectors:
@@ -72,6 +75,19 @@ redistributed. `ARTM` remains source-derived because its original library has
 not been located. Compact source-derived XPK containers for these codecs were
 also independently compared byte-for-byte with Ancient 2.3.0 where Ancient
 supports the emitted variant.
+
+The next batch adds `LZBS`, `SLZ3`, `TDCS`, `LHLB`, `SDHC`, and `CYB2`.
+Preserved `LZBS`, `SLZ3`, and `SDHC` packers produced 83 completed artifacts
+across every reported mode boundary; Python decoded all of them byte-exactly.
+Low-mode LZBS output also confirmed that its original depacker stops a final
+literal run at the declared output size even when the packer rounds that run
+up. Representative original-Amiga fixtures for all three codecs are committed.
+
+`LHLB` and `CYB2` are unpack-only in the preserved libraries: `xQuery` reports
+no packing modes and packing exits without an artifact. `TDCS` has no library
+in the preservation archive. Their decoder coverage is therefore
+source-derived and synthetic, including literal/match, nested-wrapper, delta,
+and malformed-stream cases; it is not labelled as original-packer evidence.
 
 FS-UAE runs behind Xvfb with Mesa software rendering, so oracle generation
 does not map a window onto the host desktop.
