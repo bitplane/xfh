@@ -36,4 +36,5 @@ python tools/fsuae/oracle.py write-config ~/tmp/xfh-oracle \
 `Startup-Sequence` boots directly into the selected control stage. Query and
 private-probe stages write a completion sentinel to the output directory. The
 host must impose a timeout and terminate the emulator after seeing the
-sentinel.
+sentinel. The bundled runner accepts `--headless`, which places FS-UAE behind
+Xvfb with Mesa software rendering so no window is mapped onto the desktop.

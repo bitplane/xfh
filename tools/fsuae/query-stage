@@ -2,5 +2,5 @@ FailAt 21
 Delete SHARED:outputs/query.txt QUIET
 Version LIBS:xpkmaster.library FULL >SHARED:outputs/query.txt
 Version C:xpk FULL >>SHARED:outputs/query.txt
-C:xQuery NONE NUKE FAST RAKE HUFF SHRI >>SHARED:outputs/query.txt
+C:xQuery NONE NUKE FAST RAKE HUFF SHRI CBR0 RLEN FRLE RDCN BLZW DUKE >>SHARED:outputs/query.txt
 Echo "query-complete" >SHARED:outputs/query.done

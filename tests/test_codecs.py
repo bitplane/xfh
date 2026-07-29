@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from xfh.codecs import decode, supported_codecs
@@ -21,7 +23,20 @@ def test_huff_single_symbol_stream() -> None:
 
 
 def test_initial_codec_set() -> None:
-    assert {"NONE", "NUKE", "FAST", "RAKE", "HUFF", "SHRI"} <= supported_codecs()
+    assert {
+        "NONE",
+        "NUKE",
+        "FAST",
+        "RAKE",
+        "HUFF",
+        "SHRI",
+        "CBR0",
+        "RLEN",
+        "FRLE",
+        "RDCN",
+        "BLZW",
+        "DUKE",
+    } <= supported_codecs()
 
 
 @pytest.mark.parametrize(
@@ -32,8 +47,43 @@ def test_initial_codec_set() -> None:
         ("SHRI", b""),
         ("SHRI", b"\2\0\0\1" + b"\0" * 4),
         ("SHRI", b"\1\0\0\2" + b"\0" * 4),
+        ("CBR0", b""),
+        ("RLEN", b"\0"),
+        ("FRLE", b""),
+        ("RDCN", b""),
+        ("BLZW", b""),
+        ("DUKE", b""),
     ],
 )
 def test_new_codecs_reject_malformed_streams(codec: str, payload: bytes) -> None:
     with pytest.raises(CorruptDataError):
         decode(codec, payload, 1)
+
+
+def test_duke_applies_delta_after_nuke() -> None:
+    root = Path(__file__).parent / "fixtures" / "oracle"
+    packed = bytes.fromhex((root / "nuke050-repeat1k.hex").read_text())
+    payload = packed[44:100]
+    nuke = decode("NUKE", payload, 1024)
+    expected = bytearray()
+    accumulator = 0
+    for value in nuke:
+        accumulator = (accumulator + value) & 0xFF
+        expected.append(accumulator)
+    assert decode("DUKE", payload, 1024) == expected
+
+
+def test_blzw_width_change_and_dictionary_reset() -> None:
+    fields = [
+        (65, 9),
+        (66, 9),
+        (258, 9),
+        (67, 10),
+        (257, 10),
+        (68, 9),
+        (69, 9),
+    ]
+    bit_string = "".join(f"{value:0{width}b}" for value, width in fields)
+    bit_string += "0" * (-len(bit_string) % 8)
+    payload = b"\0\x0a\0\x10" + int(bit_string, 2).to_bytes(len(bit_string) // 8, "big")
+    assert decode("BLZW", payload, 5) == b"ABCDE"

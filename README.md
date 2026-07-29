@@ -6,8 +6,9 @@ through DiskExpander.
 
 The project is under active format-recovery work. It currently implements the
 later `XPKF` container, the DiskExpander 2.1 wrapper, and pure-Python `NONE`,
-`NUKE`, `FAST`, `RAKE`, `HUFF`, and `SHRI` decompression. DiskExpander NUKE
-recovery is proven against a known packed/plain pair.
+`NUKE`, `DUKE`, `FAST`, `RAKE`, `HUFF`, `SHRI`, `CBR0`, `RLEN`, `FRLE`,
+`RDCN`, and `BLZW` decompression. DiskExpander NUKE recovery is proven against
+a known packed/plain pair.
 
 ```console
 python -m xfh info packed-file

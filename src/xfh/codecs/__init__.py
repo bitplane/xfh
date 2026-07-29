@@ -34,9 +34,12 @@ def supported_codecs() -> frozenset[str]:
     return frozenset(_DECODERS)
 
 
+from xfh.codecs import blzw as _blzw  # noqa: E402,F401
 from xfh.codecs import fast as _fast  # noqa: E402,F401
 from xfh.codecs import huff as _huff  # noqa: E402,F401
 from xfh.codecs import none as _none  # noqa: E402,F401
 from xfh.codecs import nuke as _nuke  # noqa: E402,F401
 from xfh.codecs import rake as _rake  # noqa: E402,F401
+from xfh.codecs import rdcn as _rdcn  # noqa: E402,F401
+from xfh.codecs import rle as _rle  # noqa: E402,F401
 from xfh.codecs import shri as _shri  # noqa: E402,F401

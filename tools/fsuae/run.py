@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -14,9 +16,27 @@ def main() -> int:
     parser.add_argument("config", type=Path)
     parser.add_argument("sentinel", type=Path)
     parser.add_argument("--timeout", type=float, default=120.0)
+    parser.add_argument("--headless", action="store_true")
     arguments = parser.parse_args()
     arguments.sentinel.unlink(missing_ok=True)
-    process = subprocess.Popen([str(arguments.fs_uae), str(arguments.config)])
+    command = [str(arguments.fs_uae), str(arguments.config)]
+    environment = None
+    if arguments.headless:
+        xvfb_run = shutil.which("xvfb-run")
+        if xvfb_run is None:
+            raise SystemExit("--headless requires xvfb-run")
+        command = [
+            xvfb_run,
+            "-a",
+            "-s",
+            "-screen 0 1024x768x24 +extension GLX",
+            *command,
+        ]
+        environment = os.environ | {
+            "LIBGL_ALWAYS_SOFTWARE": "1",
+            "SDL_AUDIODRIVER": "dummy",
+        }
+    process = subprocess.Popen(command, env=environment)
     deadline = time.monotonic() + arguments.timeout
     try:
         while time.monotonic() < deadline:

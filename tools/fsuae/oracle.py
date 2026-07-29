@@ -19,8 +19,28 @@ MODE_RANGES = {
     "RAKE": ((0, 25), (26, 50), (51, 75), (76, 100)),
     "HUFF": ((0, 100),),
     "SHRI": ((0, 14), (15, 28), (29, 42), (43, 56), (57, 70), (71, 84), (85, 100)),
+    "CBR0": ((0, 100),),
+    "RLEN": ((0, 100),),
+    "FRLE": ((0, 100),),
+    "RDCN": ((0, 100),),
+    "BLZW": ((0, 14), (15, 28), (29, 42), (43, 57), (58, 71), (72, 85), (86, 100)),
+    "DUKE": ((0, 100),),
 }
-DEFAULT_MODES = {"NONE": 50, "NUKE": 50, "FAST": 50, "RAKE": 100, "HUFF": 50, "SHRI": 100}
+DEFAULT_MODES = {
+    "NONE": 50,
+    "NUKE": 50,
+    "FAST": 50,
+    "RAKE": 100,
+    "HUFF": 50,
+    "SHRI": 100,
+    "CBR0": 50,
+    "RLEN": 50,
+    "FRLE": 16,
+    "RDCN": 100,
+    "BLZW": 60,
+    "DUKE": 50,
+}
+EXHAUSTIVE_MODE_CODECS = {"NONE", "NUKE", "FAST", "RAKE", "HUFF", "SHRI"}
 
 
 def _sha256(path: Path) -> str:
@@ -174,7 +194,9 @@ def render_matrix(workspace: Path, *, codecs: set[str] | None = None, resume: bo
         lines.append("Delete SHARED:outputs/matrix-status.txt QUIET")
     for codec in MODE_RANGES:
         modes_by_vector = {
-            "text": range(101),
+            "text": (
+                range(101) if codec in EXHAUSTIVE_MODE_CODECS else _representative_modes(codec)
+            ),
             **{vector: _representative_modes(codec) for vector in vectors if vector != "text"},
         }
         for vector, modes in modes_by_vector.items():

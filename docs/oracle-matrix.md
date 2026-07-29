@@ -29,6 +29,17 @@ All 1,026 emitted containers begin with `XPKF`. Small representative fixtures
 for all six codecs are committed as reviewable hexadecimal files and validate
 the current pure-Python implementations.
 
+A second isolated run added `CBR0`, `RLEN`, `FRLE`, `RDCN`, `BLZW`, and
+`DUKE`. Across the completed non-empty cases, all 372 original packed/plain
+artifacts decode byte-exactly in Python. Compact acceptance containers for
+each codec are committed as hexadecimal fixtures. The historical packers are
+run in separate or short-lived emulator sessions because repeated use can
+crash the original Amiga process; this is an oracle limitation rather than an
+accepted decoder failure.
+
+FS-UAE runs behind Xvfb with Mesa software rendering, so oracle generation
+does not map a window onto the host desktop.
+
 The recovered private wrapper beginning `01 80 63 68 05 61 01 0a` was not
 recognized as packed data by the original master library. That result rules
 out using generated XPKF files to infer its outer framing.

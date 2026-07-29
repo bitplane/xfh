@@ -85,3 +85,20 @@ def test_shri_continuation_chunk_oracle() -> None:
     root = Path(__file__).parent / "fixtures" / "oracle"
     packed = bytes.fromhex((root / "shri100-repeat64k.hex").read_text())
     assert xfh.decompress(packed) == bytes(range(64)) * 1024
+
+
+@pytest.mark.parametrize(
+    ("fixture", "expected"),
+    [
+        ("cbr0050-zero256.hex", bytes(256)),
+        ("rlen050-text.hex", b"XFH recovery oracle\r\n" * 4),
+        ("frle016-zero256.hex", bytes(256)),
+        ("rdcn100-repeat1k.hex", (b"Amiga XPK!" * 128)[:1024]),
+        ("blzw060-zero256.hex", bytes(256)),
+        ("duke050-bytes.hex", bytes(range(256))),
+    ],
+)
+def test_additional_codec_oracles(fixture: str, expected: bytes) -> None:
+    root = Path(__file__).parent / "fixtures" / "oracle"
+    packed = bytes.fromhex((root / fixture).read_text())
+    assert xfh.decompress(packed) == expected

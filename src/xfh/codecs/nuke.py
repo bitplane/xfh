@@ -86,3 +86,15 @@ def decompress_nuke(payload: bytes, output_size: int, previous: bytes = b"") -> 
         copy_forward(output, distance, count, output_size)
 
     return bytes(output)
+
+
+@register("DUKE")
+def decompress_duke(payload: bytes, output_size: int, previous: bytes = b"") -> bytes:
+    """Decode NUKE data followed by DUKE's byte-delta transform."""
+
+    decoded = bytearray(decompress_nuke(payload, output_size, previous))
+    accumulator = 0
+    for index, value in enumerate(decoded):
+        accumulator = (accumulator + value) & 0xFF
+        decoded[index] = accumulator
+    return bytes(decoded)
