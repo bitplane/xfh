@@ -51,6 +51,10 @@ DEFAULT_MODES = {
     "SQSH": 100,
 }
 EXHAUSTIVE_MODE_CODECS = {"NONE", "NUKE", "FAST", "RAKE", "HUFF", "SHRI"}
+UNSAFE_CASES = {
+    ("DLTA", "one"): "original packer hangs on a one-byte input",
+    ("HFMN", "bytes"): "original packer hangs on the ascending-byte vector",
+}
 
 
 def _sha256(path: Path) -> str:
@@ -219,8 +223,14 @@ def render_matrix(
         for vector, modes in modes_by_vector.items():
             for mode in modes:
                 identifier = f"{codec.lower()}{mode:03d}-{vector}"
-                cases.append({"id": identifier, "codec": codec, "mode": mode, "vector": vector})
+                unsafe_reason = UNSAFE_CASES.get((codec, vector))
+                case = {"id": identifier, "codec": codec, "mode": mode, "vector": vector}
+                if unsafe_reason:
+                    case["excluded_reason"] = unsafe_reason
+                cases.append(case)
                 if codecs is not None and codec not in codecs:
+                    continue
+                if unsafe_reason:
                     continue
                 result_path = workspace / "shared" / "outputs" / f"{identifier}.unpacked"
                 if resume and result_path.is_file():
@@ -249,6 +259,10 @@ def render_matrix(
                 "schema_version": SCHEMA_VERSION,
                 "mode_ranges": MODE_RANGES,
                 "default_modes": DEFAULT_MODES,
+                "unsafe_cases": [
+                    {"codec": codec, "vector": vector, "reason": reason}
+                    for (codec, vector), reason in sorted(UNSAFE_CASES.items())
+                ],
                 "cases": cases,
             },
             indent=2,
@@ -269,6 +283,10 @@ def analyze_matrix(workspace: Path) -> None:
     counts: dict[str, int] = {}
     for case in metadata["cases"]:
         identifier = case["id"]
+        if "excluded_reason" in case:
+            results.append({**case, "status": "excluded"})
+            counts["excluded"] = counts.get("excluded", 0) + 1
+            continue
         packed = output_root / f"{identifier}.packed"
         unpacked = output_root / f"{identifier}.unpacked"
         log = output_root / f"{identifier}.log"
@@ -309,6 +327,42 @@ def analyze_matrix(workspace: Path) -> None:
         raise SystemExit(f"matrix contains {counts['mismatch']} round-trip mismatches")
 
 
+def verify_python(workspace: Path) -> None:
+    """Decode completed matrix containers with xfh and compare original output."""
+
+    import xfh
+
+    metadata = json.loads((workspace / "metadata" / "matrix-cases.json").read_text())
+    output_root = workspace / "shared" / "outputs"
+    results = []
+    failures = 0
+    for case in metadata["cases"]:
+        packed = output_root / f"{case['id']}.packed"
+        unpacked = output_root / f"{case['id']}.unpacked"
+        if "excluded_reason" in case or not packed.is_file() or not unpacked.is_file():
+            continue
+        try:
+            decoded = xfh.decompress(packed.read_bytes())
+            matches = decoded == unpacked.read_bytes()
+            error = None
+        except xfh.XfhError as exception:
+            matches = False
+            error = str(exception)
+        failures += not matches
+        results.append({**case, "matches": matches, "error": error})
+    report = {
+        "schema_version": SCHEMA_VERSION,
+        "checked": len(results),
+        "failures": failures,
+        "results": results,
+    }
+    (workspace / "metadata" / "python-comparison.json").write_text(
+        json.dumps(report, indent=2, sort_keys=True) + "\n"
+    )
+    if failures:
+        raise SystemExit(f"Python comparison contains {failures} failures")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -335,6 +389,8 @@ def main() -> int:
     matrix_parser.add_argument("--resume", action="store_true")
     analyze_parser = subparsers.add_parser("analyze")
     analyze_parser.add_argument("workspace", type=Path)
+    compare_parser = subparsers.add_parser("verify-python")
+    compare_parser.add_argument("workspace", type=Path)
     arguments = parser.parse_args()
     if arguments.command == "prepare":
         prepare(arguments.workspace, force=arguments.force)
@@ -356,8 +412,10 @@ def main() -> int:
             vectors=set(arguments.vector) if arguments.vector else None,
             resume=arguments.resume,
         )
-    else:
+    elif arguments.command == "analyze":
         analyze_matrix(arguments.workspace)
+    else:
+        verify_python(arguments.workspace)
     return 0
 
 

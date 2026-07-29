@@ -29,9 +29,10 @@ def _decode_runs(
     return bytes(output)
 
 
+@register("CBR1")
 @register("CBR0")
 def decompress_cbr0(payload: bytes, output_size: int, previous: bytes = b"") -> bytes:
-    """Decode Commodore ByteRun-style CBR0 data."""
+    """Decode Commodore ByteRun-style CBR0/CBR1 data."""
 
     del previous
 

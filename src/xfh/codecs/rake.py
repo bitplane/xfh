@@ -78,9 +78,10 @@ def _decode_length(bits: _RakeBits) -> int:
     raise CorruptDataError("invalid RAKE Huffman code")
 
 
+@register("FRHT")
 @register("RAKE")
 def decompress_rake(payload: bytes, output_size: int, previous: bytes = b"") -> bytes:
-    """Decode one RAKE chunk."""
+    """Decode one RAKE/FRHT chunk."""
 
     del previous
     if len(payload) < 8:

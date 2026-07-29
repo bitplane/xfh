@@ -81,6 +81,19 @@ def test_public_oracle_fixtures() -> None:
         assert xfh.decompress(packed) == expected
 
 
+def test_manifest_covers_every_compact_public_xpk_fixture() -> None:
+    root = Path(__file__).parent / "fixtures" / "oracle"
+    manifest = json.loads((root / "manifest.json").read_text())
+    listed = {fixture["packed"]["path"] for fixture in manifest["fixtures"]}
+    containers = {
+        path.name
+        for path in root.glob("*.hex")
+        if bytes.fromhex(path.read_text()).startswith(b"XPKF")
+        and path.name != "shri100-repeat64k.hex"
+    }
+    assert listed == containers
+
+
 def test_shri_continuation_chunk_oracle() -> None:
     root = Path(__file__).parent / "fixtures" / "oracle"
     packed = bytes.fromhex((root / "shri100-repeat64k.hex").read_text())

@@ -20,6 +20,15 @@ versions, codec, mode, and command in `manifest.json`. Verify the unpacked
 result inside the guest and again with Python before accepting a fixture.
 Never attach a personal disk image to the fixture VM.
 
+Known original-packer hangs are encoded in `UNSAFE_CASES` and omitted from
+generated guest stages. They remain visible as exclusions in matrix metadata.
+After a run, compare every completed container directly with the Python
+implementation and write a machine-readable report:
+
+```console
+python tools/fsuae/oracle.py verify-python ~/tmp/xfh-oracle
+```
+
 The host helper creates deterministic inputs, inventories private binaries by
 hash, extracts a clean Workbench directory drive, and writes an FS-UAE
 configuration:

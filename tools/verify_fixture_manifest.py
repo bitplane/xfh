@@ -11,6 +11,24 @@ SCHEMA_VERSION = 1
 MAX_PUBLIC_ARTIFACT_SIZE = 64 * 1024
 PROHIBITED_SUFFIXES = {".adf", ".hdf", ".img", ".library", ".rom"}
 ARTIFACT_FIELDS = ("input", "packed", "unpacked")
+PUBLIC_CODECS = {
+    "NONE",
+    "NUKE",
+    "DUKE",
+    "FAST",
+    "RAKE",
+    "HUFF",
+    "SHRI",
+    "CBR0",
+    "RLEN",
+    "FRLE",
+    "RDCN",
+    "BLZW",
+    "DLTA",
+    "HFMN",
+    "MASH",
+    "SQSH",
+}
 
 
 def _artifact_path(root: Path, value: str) -> Path:
@@ -74,8 +92,8 @@ def verify_manifest(path: Path) -> None:
         if identifier in identifiers:
             raise ValueError(f"duplicate fixture id: {identifier}")
         identifiers.add(identifier)
-        if fixture.get("codec") not in {"NONE", "NUKE", "FAST", "RAKE", "HUFF", "SHRI"}:
-            raise ValueError(f"{identifier}: codec is outside the initial oracle set")
+        if fixture.get("codec") not in PUBLIC_CODECS:
+            raise ValueError(f"{identifier}: codec is outside the public oracle set")
         if not isinstance(fixture.get("mode"), int):
             raise ValueError(f"{identifier}: mode must be an integer")
         if fixture.get("status") != "success":

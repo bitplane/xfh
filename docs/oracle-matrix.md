@@ -51,6 +51,12 @@ prefix-code test rather than claiming compressed oracle coverage. DLTA hangs
 on a one-byte input and HFMN hangs on one broad byte-pattern input; those
 original-packer defects are excluded from the safe fixture stage.
 
+Every compact committed acceptance container is recorded in the public
+manifest with its input, output, size, and SHA-256 hashes. Known hanging
+packer/vector pairs are machine-readable exclusions and are never emitted
+into a guest stage. `oracle.py verify-python` performs the direct comparison
+and records its results as JSON.
+
 FS-UAE runs behind Xvfb with Mesa software rendering, so oracle generation
 does not map a window onto the host desktop.
 
