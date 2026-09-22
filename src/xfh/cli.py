@@ -79,6 +79,19 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _validate_recovery_paths(source: Path, output: Path, report: Path | None, force: bool) -> None:
+    paths = [source, output] + ([report] if report is not None else [])
+    for index, left in enumerate(paths):
+        for right in paths[index + 1 :]:
+            if left.resolve() == right.resolve() or (
+                left.exists() and right.exists() and left.samefile(right)
+            ):
+                raise ValueError("input, output, and report must refer to different files")
+    for destination in paths[1:]:
+        if os.path.lexists(destination) and not force:
+            raise FileExistsError(destination)
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the CLI and return its process status."""
 
@@ -105,7 +118,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{arguments.file}: verified")
             return 0
 
+        if arguments.report and not arguments.salvage:
+            raise ValueError("--report requires --salvage")
         if arguments.salvage:
+            _validate_recovery_paths(
+                arguments.file, arguments.output, arguments.report, arguments.force
+            )
             data = arguments.file.read_bytes()
             result = salvage(
                 data, password=_password_for(data, limits, recovery=True), limits=limits

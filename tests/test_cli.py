@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from xfh.cli import main
 
 from .helpers import xpkf
@@ -89,3 +91,35 @@ def test_cli_salvage_reports_container_damage(tmp_path):
     assert main(["unpack", str(source), str(output), "--salvage", "--report", str(report)]) == 4
     assert output.read_bytes() == b"good"
     assert json.loads(report.read_text())["issues"][0]["offset"] == 48
+
+
+@pytest.mark.parametrize("alias", ["output", "input", "symlink", "hardlink"])
+def test_salvage_rejects_report_aliases_before_writing(tmp_path, alias):
+    import os
+
+    source, output, report = (tmp_path / name for name in ("input", "output", "report"))
+    source.write_bytes(_packed())
+    output.write_bytes(b"keep output")
+    if alias == "output":
+        report = output
+    elif alias == "input":
+        report = source
+    elif alias == "symlink":
+        report.symlink_to(output)
+    else:
+        os.link(source, report)
+    assert (
+        main(["unpack", str(source), str(output), "--salvage", "--force", "--report", str(report)])
+        == 1
+    )
+    assert source.read_bytes() == _packed()
+    assert output.read_bytes() == b"keep output"
+
+
+def test_existing_report_is_checked_before_output_is_written(tmp_path):
+    source, output, report = (tmp_path / name for name in ("input", "output", "report"))
+    source.write_bytes(_packed())
+    report.write_bytes(b"keep report")
+    assert main(["unpack", str(source), str(output), "--salvage", "--report", str(report)]) == 1
+    assert not output.exists()
+    assert report.read_bytes() == b"keep report"
