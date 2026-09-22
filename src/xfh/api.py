@@ -66,7 +66,8 @@ def _decompress_parsed(parsed: ParsedFile, password: bytes | None = None) -> byt
             if parsed.info.codec == "SHID":
                 from xfh.codecs.crypt import decrypt_shid
 
-                assert password is not None
+                if password is None:
+                    raise PasswordRequiredError("SHID stream needs a password")
                 payload = decrypt_shid(payload, password)
             decoded, shri_state = decompress_shri_chunk(
                 payload,
@@ -147,7 +148,8 @@ def salvage(
                 if parsed.info.codec == "SHID":
                     from xfh.codecs.crypt import decrypt_shid
 
-                    assert password_value is not None
+                    if password_value is None:
+                        raise PasswordRequiredError("SHID stream needs a password")
                     payload = decrypt_shid(payload, password_value)
                 decoded, shri_state = decompress_shri_chunk(
                     payload,

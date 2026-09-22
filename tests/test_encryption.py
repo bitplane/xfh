@@ -49,3 +49,15 @@ def test_genuine_blfh_oracles(fixture: str, expected: bytes) -> None:
 def test_unrepresentable_amiga_password_is_rejected(password: str) -> None:
     with pytest.raises(ValueError, match="password"):
         xfh.decompress(b"", password=password)
+
+
+def test_shid_without_encryption_flag_fails_safely():
+    from tests.helpers import xpkf
+
+    packed = xpkf("SHID", [(1, b"abc", 1)])
+    with pytest.raises(PasswordRequiredError):
+        xfh.decompress(packed)
+    result = xfh.salvage(packed)
+    assert not result.complete
+    assert result.data == b""
+    assert "password" in result.issues[0].message
