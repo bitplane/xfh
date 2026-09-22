@@ -79,3 +79,13 @@ def test_encrypted_stream_never_prompts_without_a_terminal(
     monkeypatch.setattr("sys.stdin.isatty", lambda: False)
     assert main(["verify", str(source)]) == 1
     assert "set XFH_PASSWORD" in capsys.readouterr().err
+
+
+def test_cli_salvage_reports_container_damage(tmp_path):
+    packed = bytearray(xpkf("NONE", [(0, b"good", 4), (0, b"bad!", 4)], b"goodbad!"))
+    packed[56] ^= 1
+    source, output, report = (tmp_path / name for name in ("input", "output", "report"))
+    source.write_bytes(packed)
+    assert main(["unpack", str(source), str(output), "--salvage", "--report", str(report)]) == 4
+    assert output.read_bytes() == b"good"
+    assert json.loads(report.read_text())["issues"][0]["offset"] == 48

@@ -105,3 +105,53 @@ def test_salvage_rejects_initial_plaintext_mismatch():
     assert not result.complete
     assert result.issues[0].offset == 16
     assert "initial bytes" in result.issues[0].message
+
+
+@pytest.mark.parametrize("damage", ["checksum", "truncated", "missing_end", "padding"])
+def test_salvage_keeps_verified_prefix(damage):
+    packed = bytearray(xpkf("NONE", [(0, b"good", 4), (0, b"later", 5)], b"goodlater"))
+    if damage == "checksum":
+        packed[56] ^= 1
+    elif damage == "truncated":
+        del packed[58:]
+    elif damage == "missing_end":
+        del packed[-8:]
+    else:
+        packed[61] = 1
+    result = xfh.salvage(packed)
+    assert result.data == (b"goodlater" if damage == "missing_end" else b"good")
+    assert not result.complete
+    assert len(result.issues) == 1
+    assert result.issues[0].offset == (64 if damage == "missing_end" else 48)
+    with pytest.raises(CorruptDataError):
+        xfh.decompress(packed)
+
+
+def test_salvage_still_enforces_global_and_chunk_limits():
+    packed = xpkf("NONE", [(0, b"good", 4), (0, b"later", 5)], b"goodlater")
+    assert xfh.salvage(packed, limits=Limits(max_output_size=1)).data == b""
+    result = xfh.salvage(packed, limits=Limits(max_chunks=1))
+    assert result.data == b"good"
+    assert not result.complete
+    assert "chunk count" in result.issues[0].message
+
+
+def test_salvage_keeps_legacy_prefix_with_intact_table():
+    from xfh.container import LEGACY_MAGIC
+
+    first = b"\xff\xff" + bytes(10000)
+    second = b"\0\1xx"  # length disagrees with the intact boundary table
+    table = 24 + len(first) + len(second)
+    packed = (
+        LEGACY_MAGIC
+        + (20000).to_bytes(4, "big")
+        + table.to_bytes(4, "big")
+        + b"xpkNONE\0"
+        + first
+        + second
+        + b"".join(n.to_bytes(4, "big") for n in (24, 24 + len(first), table))
+    )
+    result = xfh.salvage(packed)
+    assert result.data == bytes(10000)
+    assert not result.complete
+    assert result.issues[0].offset == 10026

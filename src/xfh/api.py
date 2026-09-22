@@ -125,7 +125,7 @@ def salvage(
 
     raw = _bytes(data)
     try:
-        parsed = parse(raw, limits)
+        parsed = parse(raw, limits, salvage=True)
     except XfhError as error:
         return RecoveryResult(b"", False, (RecoveryIssue(0, str(error)),))
     output = bytearray()
@@ -178,6 +178,8 @@ def salvage(
         and output[: len(parsed.info.initial)] != parsed.info.initial[: len(output)]
     ):
         issues.append(RecoveryIssue(16, "decompressed data does not match XPKF initial bytes"))
+    if not issues:
+        issues.extend(parsed.issues)
     complete = not issues and len(output) == parsed.info.unpacked_size
     return RecoveryResult(bytes(output), complete, tuple(issues))
 

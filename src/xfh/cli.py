@@ -15,10 +15,19 @@ from xfh.errors import UnsupportedCodecError, XfhError
 from xfh.limits import Limits
 
 
-def _password_for(data: bytes, limits: Limits) -> str | None:
+def _password_for(data: bytes, limits: Limits, *, recovery: bool = False) -> str | None:
     """Obtain a password only when the stream declares that it needs one."""
 
-    if not inspect(data, limits=limits).flags & 2:
+    from xfh.container import parse
+
+    try:
+        flags = parse(data, limits, salvage=recovery).info.flags
+    except XfhError:
+        if not recovery:
+            raise
+        # Let salvage return a structured issue for an unreadable global header.
+        return None
+    if not flags & 2:
         return None
     if "XFH_PASSWORD" in os.environ:
         return os.environ["XFH_PASSWORD"]
@@ -98,7 +107,9 @@ def main(argv: list[str] | None = None) -> int:
 
         if arguments.salvage:
             data = arguments.file.read_bytes()
-            result = salvage(data, password=_password_for(data, limits), limits=limits)
+            result = salvage(
+                data, password=_password_for(data, limits, recovery=True), limits=limits
+            )
             _write_atomic(arguments.output, result.data, overwrite=arguments.force)
             report = {
                 "complete": result.complete,
