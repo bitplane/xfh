@@ -77,7 +77,8 @@ Path("recovered-file").write_bytes(plain)
 ```
 
 `xfh.decompress_file()` provides atomic, non-overwriting file output.
-`xfh.Limits` controls maximum output size and chunk count.
+`xfh.Limits` controls maximum output size, total chunk count across nested
+streams, and nesting depth (16 streams by default).
 
 ## Supported codecs
 

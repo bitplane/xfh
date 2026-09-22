@@ -53,11 +53,9 @@ def decompress_sdhc(payload: bytes, output_size: int, previous: bytes = b"") -> 
     source = payload[2:]
     if mode & 0x8000:
         from xfh.api import decompress
-        from xfh.limits import Limits
+        from xfh.limits import nested_limits
 
-        decoded = bytearray(
-            decompress(source, limits=Limits(max_output_size=output_size, max_chunks=1024))
-        )
+        decoded = bytearray(decompress(source, limits=nested_limits(output_size)))
         if len(decoded) != output_size:
             raise CorruptDataError("nested SDHC stream has the wrong output size")
     else:

@@ -7,7 +7,7 @@ from pathlib import Path
 from xfh.codecs import decode
 from xfh.container import ParsedFile, detect_format, parse
 from xfh.errors import CorruptDataError, PasswordRequiredError, XfhError
-from xfh.limits import DEFAULT_LIMITS, Limits
+from xfh.limits import DEFAULT_LIMITS, Limits, charge_chunks, decoding_scope
 from xfh.models import FileFormat, FileInfo, RecoveryIssue, RecoveryResult
 
 
@@ -49,7 +49,15 @@ def _password_bytes(password: str | bytes | None) -> bytes | None:
     return value
 
 
-def _decompress_parsed(parsed: ParsedFile, password: bytes | None = None) -> bytes:
+def _decompress_parsed(
+    parsed: ParsedFile, password: bytes | None = None, *, limits: Limits = DEFAULT_LIMITS
+) -> bytes:
+    with decoding_scope(limits):
+        charge_chunks(len(parsed.chunks))
+        return _decode_parsed(parsed, password)
+
+
+def _decode_parsed(parsed: ParsedFile, password: bytes | None) -> bytes:
     if parsed.info.flags & 2 and password is None:
         raise PasswordRequiredError("password-protected XPK stream needs a password")
     output = bytearray()
@@ -112,7 +120,7 @@ def decompress(
     """Strictly decompress one complete stream."""
 
     password_value = _password_bytes(password)
-    return _decompress_parsed(parse(_bytes(data), limits), password_value)
+    return _decompress_parsed(parse(_bytes(data), limits), password_value, limits=limits)
 
 
 def salvage(
@@ -123,9 +131,18 @@ def salvage(
 ) -> RecoveryResult:
     """Recover verified chunks until the first decoding failure."""
 
+    try:
+        with decoding_scope(limits):
+            return _salvage(data, password=password, limits=limits)
+    except XfhError as error:
+        return RecoveryResult(b"", False, (RecoveryIssue(0, str(error)),))
+
+
+def _salvage(data, *, password, limits):
     raw = _bytes(data)
     try:
         parsed = parse(raw, limits, salvage=True)
+        charge_chunks(len(parsed.chunks))
     except XfhError as error:
         return RecoveryResult(b"", False, (RecoveryIssue(0, str(error)),))
     output = bytearray()
@@ -200,7 +217,7 @@ def decompress_file(
         raise FileExistsError(destination_path)
     data = source_path.read_bytes()
     parsed = parse(data, limits)
-    output = _decompress_parsed(parsed, _password_bytes(password))
+    output = _decompress_parsed(parsed, _password_bytes(password), limits=limits)
     _write_atomic(destination_path, output, overwrite=overwrite)
     return parsed.info
 

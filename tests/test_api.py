@@ -155,3 +155,31 @@ def test_salvage_keeps_legacy_prefix_with_intact_table():
     assert result.data == bytes(10000)
     assert not result.complete
     assert result.issues[0].offset == 10026
+
+
+def _nested_stream(depth):
+    packed = xpkf("NONE", [(0, b"a", 1)], b"a")
+    for _ in range(depth):
+        packed = xpkf("SDHC", [(1, b"\x80\0" + packed, 1)], b"a")
+    return packed
+
+
+def test_nested_streams_obey_depth_and_shared_chunk_limits():
+    with pytest.raises(ResourceLimitError, match="nesting"):
+        xfh.decompress(_nested_stream(250), limits=Limits(max_output_size=1))
+    with pytest.raises(ResourceLimitError, match="total chunk"):
+        xfh.decompress(_nested_stream(1), limits=Limits(max_output_size=1, max_chunks=2))
+    assert xfh.decompress(_nested_stream(1), limits=Limits(max_depth=2, max_chunks=4)) == b"a"
+    result = xfh.salvage(_nested_stream(3), limits=Limits(max_depth=2))
+    assert not result.complete
+    assert "nesting" in result.issues[0].message
+    # A failed operation must not leak its budget into the next independent call.
+    assert xfh.decompress(_nested_stream(0), limits=Limits(max_depth=1, max_chunks=2)) == b"a"
+
+
+def test_nested_limits_apply_to_file_api(tmp_path):
+    source = tmp_path / "input"
+    source.write_bytes(_nested_stream(2))
+    with pytest.raises(ResourceLimitError):
+        xfh.decompress_file(source, tmp_path / "output", limits=Limits(max_depth=1))
+    assert not (tmp_path / "output").exists()
