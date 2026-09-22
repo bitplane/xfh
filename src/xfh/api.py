@@ -186,7 +186,7 @@ def decompress_file(
 
     source_path = Path(source)
     destination_path = Path(destination)
-    if destination_path.exists() and not overwrite:
+    if os.path.lexists(destination_path) and not overwrite:
         raise FileExistsError(destination_path)
     data = source_path.read_bytes()
     parsed = parse(data, limits)
@@ -196,7 +196,7 @@ def decompress_file(
 
 
 def _write_atomic(path: Path, data: bytes, *, overwrite: bool) -> None:
-    if path.exists() and not overwrite:
+    if os.path.lexists(path) and not overwrite:
         raise FileExistsError(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
@@ -206,9 +206,13 @@ def _write_atomic(path: Path, data: bytes, *, overwrite: bool) -> None:
             file.write(data)
             file.flush()
             os.fsync(file.fileno())
-        if path.exists() and not overwrite:
-            raise FileExistsError(path)
-        os.replace(temporary_path, path)
+        if overwrite:
+            os.replace(temporary_path, path)
+        else:
+            # Linking publishes the complete file atomically and fails if any
+            # directory entry (including a dangling symlink) already exists.
+            os.link(temporary_path, path)
+            temporary_path.unlink()
     except BaseException:
         temporary_path.unlink(missing_ok=True)
         raise

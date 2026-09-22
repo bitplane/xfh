@@ -52,3 +52,45 @@ def test_salvage_never_hides_parse_failure() -> None:
     assert result.data == b""
     assert not result.complete
     assert result.issues
+
+
+@pytest.mark.parametrize("dangling", [False, True])
+def test_atomic_output_preserves_existing_entries(tmp_path, dangling):
+    from xfh.api import _write_atomic
+
+    target = tmp_path / "out"
+    if dangling:
+        target.symlink_to(tmp_path / "missing")
+    else:
+        target.write_bytes(b"original")
+    with pytest.raises(FileExistsError):
+        _write_atomic(target, b"new", overwrite=False)
+    assert target.is_symlink() if dangling else target.read_bytes() == b"original"
+
+
+def test_atomic_output_preserves_concurrent_writer(tmp_path, monkeypatch):
+    import os
+
+    from xfh.api import _write_atomic
+
+    target = tmp_path / "out"
+    real_link = os.link
+
+    def publish(source, destination):
+        target.write_bytes(b"concurrent")
+        return real_link(source, destination)
+
+    monkeypatch.setattr(os, "link", publish)
+    with pytest.raises(FileExistsError):
+        _write_atomic(target, b"new", overwrite=False)
+    assert target.read_bytes() == b"concurrent"
+    assert list(tmp_path.iterdir()) == [target]
+
+
+def test_atomic_output_explicit_overwrite(tmp_path):
+    from xfh.api import _write_atomic
+
+    target = tmp_path / "out"
+    target.write_bytes(b"old")
+    _write_atomic(target, b"new", overwrite=True)
+    assert target.read_bytes() == b"new"
