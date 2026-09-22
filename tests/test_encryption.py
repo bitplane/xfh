@@ -61,3 +61,44 @@ def test_shid_without_encryption_flag_fails_safely():
     assert not result.complete
     assert result.data == b""
     assert "password" in result.issues[0].message
+
+
+@pytest.mark.parametrize(
+    ("rounds", "ciphertext"),
+    [(8, "ceef2c86f2490752"), (16, "3ade0d2ad84d0b6f"), (32, "69b0fae6dded6b0b")],
+)
+def test_feal_published_known_answers(monkeypatch, rounds, ciphertext):
+    # Handbook of Applied Cryptography, example 7.99 (Miyaguchi vectors).
+    # https://cacr.uwaterloo.ca/hac/about/chap7.pdf
+    from xfh.codecs import crypt
+
+    monkeypatch.setattr(crypt, "_feal_password", lambda _: (0x01234567, 0x89ABCDEF))
+    keys = crypt._feal_keys(b"", rounds)
+    if rounds == 8:
+        assert b"".join(k.to_bytes(2, "big") for k in keys).hex() == (
+            "df3bca36f17c1aec45a5b9c726ebad258b2aecb7ac509d4c22cd479ba8d50cb5"
+        )
+    assert crypt._feal_block(bytes(8), keys, rounds).hex() == ciphertext
+    # One zero block is the CBC1 padding for an empty XPK chunk.
+    payload = b"\0\0\1" + bytes((rounds,)) + bytes.fromhex(ciphertext)
+    assert decode("FEAL", payload, 0, password=b"key") == b""
+
+
+@pytest.mark.parametrize("password", [b"a", b"secret", b"recovery-test"])
+def test_feal_passwords_and_cbc_framing(password):
+    from xfh.codecs.crypt import _feal_block, _feal_keys
+
+    plaintext = b"recover me"
+    padded = plaintext + bytes(5) + b"\2"
+    keys = _feal_keys(password, 8)
+    previous = bytes(8)
+    ciphertext = bytearray()
+    for offset in range(0, len(padded), 8):
+        block = bytes(a ^ b for a, b in zip(padded[offset : offset + 8], previous, strict=True))
+        previous = _feal_block(block, keys, 8)
+        ciphertext.extend(previous)
+    checksum = sum(int.from_bytes(padded[i : i + 4], "big") for i in (0, 8)) & 0xFFFF
+    payload = checksum.to_bytes(2, "big") + b"\1\x08" + ciphertext
+    assert decode("FEAL", payload, len(plaintext), password=password) == plaintext
+    with pytest.raises(IncorrectPasswordError):
+        decode("FEAL", payload, len(plaintext), password=b"wrong")

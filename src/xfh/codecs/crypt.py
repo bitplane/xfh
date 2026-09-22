@@ -37,19 +37,34 @@ def decompress_enco(payload: bytes, output_size: int, previous: bytes, password:
 
 
 def _rol8(value: int, count: int) -> int:
+    value &= 0xFF
     return ((value << count) | (value >> (8 - count))) & 0xFF
 
 
 def _feal_f(value: int, key: int) -> int:
     a0, a1, a2, a3 = value.to_bytes(4, "big")
     b0, b1 = key.to_bytes(2, "big")
-    f1 = a1 ^ a0
-    f2 = a2 ^ a3
-    f1 = _rol8(f1 + (f2 ^ b0) + 1, 2)
-    f2 = _rol8(f2 + (f1 ^ b1), 2)
+    f1 = a1 ^ a0 ^ b0
+    f2 = a2 ^ a3 ^ b1
+    f1 = _rol8(f1 + f2 + 1, 2)
+    f2 = _rol8(f2 + f1, 2)
     f0 = _rol8(a0 + f1, 2)
     f3 = _rol8(a3 + f2 + 1, 2)
     return (f0 << 24) | (f1 << 16) | (f2 << 8) | f3
+
+
+def _feal_fk(value: int, key: int) -> int:
+    """FEAL's distinct 32-bit key-schedule function (NTT specification §5.2)."""
+
+    a0, a1, a2, a3 = value.to_bytes(4, "big")
+    b0, b1, b2, b3 = key.to_bytes(4, "big")
+    middle1 = a0 ^ a1
+    middle2 = a2 ^ a3
+    middle1 = _rol8(middle1 + (middle2 ^ b0) + 1, 2)
+    middle2 = _rol8(middle2 + (middle1 ^ b1), 2)
+    first = _rol8(a0 + (middle1 ^ b2), 2)
+    last = _rol8(a3 + (middle2 ^ b3) + 1, 2)
+    return int.from_bytes(bytes((first, middle1, middle2, last)), "big")
 
 
 def _feal_password(password: bytes) -> tuple[int, int]:
@@ -64,7 +79,7 @@ def _feal_keys(password: bytes, rounds: int) -> list[int]:
     a, b, d = left, right, 0
     words: list[int] = []
     for _ in range(rounds // 2 + 4):
-        c = _feal_f(a, b ^ d)
+        c = _feal_fk(a, b ^ d)
         d, a, b = a, b, c
         words.extend((c >> 16, c & _MASK16))
     return words
