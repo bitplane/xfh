@@ -58,3 +58,18 @@ def test_amigaget_rejects_incomplete_files(node, tmp_path, damage):
     else:
         assert result.returncode != 0
         assert not output.exists()
+
+
+@pytest.mark.parametrize("status", [0, 1, 5])
+def test_coverage_script_preserves_pytest_failure(tmp_path, status):
+    activation = tmp_path / ".venv/bin"
+    activation.mkdir(parents=True)
+    (activation / "activate").write_text(f'pytest() {{ echo "test output"; return {status}; }}\n')
+    result = subprocess.run(
+        ["bash", str(ROOT / "scripts/coverage.sh"), "xfh"],
+        cwd=tmp_path,
+        capture_output=True,
+        timeout=10,
+    )
+    assert result.returncode == status
+    assert "test output" in (tmp_path / "htmlcov/coverage_report.txt").read_text()
