@@ -49,6 +49,14 @@ def _password_bytes(password: str | bytes | None) -> bytes | None:
     return value
 
 
+def _history(codec: str, output: bytearray) -> bytes:
+    # Only SHRI-family backreferences can cross chunks. CYB2 can wrap them.
+    # Their encoded distances fit within a 64 KiB sliding window.
+    if codec in {"SHRI", "SHR3", "SHID", "CYB2"}:
+        return bytes(memoryview(output)[-65536:])
+    return b""
+
+
 def _decompress_parsed(
     parsed: ParsedFile, password: bytes | None = None, *, limits: Limits = DEFAULT_LIMITS
 ) -> bytes:
@@ -80,7 +88,7 @@ def _decode_parsed(parsed: ParsedFile, password: bytes | None) -> bytes:
             decoded, shri_state = decompress_shri_chunk(
                 payload,
                 chunk.info.unpacked_size,
-                bytes(output),
+                _history(parsed.info.codec, output),
                 shri_state,
                 shr3=parsed.info.codec == "SHR3",
             )
@@ -89,7 +97,7 @@ def _decode_parsed(parsed: ParsedFile, password: bytes | None) -> bytes:
                 parsed.info.codec,
                 chunk.payload,
                 chunk.info.unpacked_size,
-                bytes(output),
+                _history(parsed.info.codec, output),
                 password=password,
             )
         if len(decoded) != chunk.info.unpacked_size:
@@ -171,7 +179,7 @@ def _salvage(data, *, password, limits):
                 decoded, shri_state = decompress_shri_chunk(
                     payload,
                     chunk.info.unpacked_size,
-                    bytes(output),
+                    _history(parsed.info.codec, output),
                     shri_state,
                     shr3=parsed.info.codec == "SHR3",
                 )
@@ -180,7 +188,7 @@ def _salvage(data, *, password, limits):
                     parsed.info.codec,
                     chunk.payload,
                     chunk.info.unpacked_size,
-                    bytes(output),
+                    _history(parsed.info.codec, output),
                     password=password_value,
                 )
             if len(decoded) != chunk.info.unpacked_size:

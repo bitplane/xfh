@@ -183,3 +183,39 @@ def test_nested_limits_apply_to_file_api(tmp_path):
     with pytest.raises(ResourceLimitError):
         xfh.decompress_file(source, tmp_path / "output", limits=Limits(max_depth=1))
     assert not (tmp_path / "output").exists()
+
+
+@pytest.mark.parametrize("recover", [xfh.decompress, xfh.salvage])
+def test_independent_chunks_do_not_copy_output_history(monkeypatch, recover):
+    from xfh.codecs import _DECODERS
+
+    original = _DECODERS["NONE"]
+
+    def decode(payload, size, previous):
+        assert previous == b""
+        return original(payload, size, previous)
+
+    monkeypatch.setitem(_DECODERS, "NONE", decode)
+    expected = b"x" * 1024 * 128
+    packed = xpkf("NONE", [(1, b"x" * 1024, 1024)] * 128, expected)
+    result = recover(packed)
+    assert (result if isinstance(result, bytes) else result.data) == expected
+
+
+def test_cyb2_history_is_bounded_and_preserves_the_suffix(monkeypatch):
+    from xfh.codecs import _DECODERS
+
+    prefix = bytes(range(256)) * 512
+
+    def inner(payload, size, previous):
+        assert previous == prefix[-65536:]
+        return previous[-1:]
+
+    monkeypatch.setitem(_DECODERS, "SHRI", inner)
+    packed = xpkf(
+        "CYB2",
+        [(0, prefix, len(prefix)), (1, b"SHRI" + bytes(6) + b"x", 1)],
+        prefix,
+        long_headers=True,
+    )
+    assert xfh.decompress(packed) == prefix + prefix[-1:]
