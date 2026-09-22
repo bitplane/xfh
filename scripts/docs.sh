@@ -19,7 +19,9 @@ pydoc-markdown -p "$MODULE_NAME" > ../docs/pydoc/index.md
 cd ..
 
 # Check out the main website repo
-TMP_DIR=$(mktemp -d)
+XFH_TMPDIR="${XFH_TMPDIR:-$HOME/tmp}"
+mkdir -p "$XFH_TMPDIR"
+TMP_DIR=$(mktemp -d "$XFH_TMPDIR/xfh-docs.XXXXXX")
 
 # Cleanup on exit
 cleanup() {

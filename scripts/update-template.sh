@@ -25,7 +25,9 @@ fi
 project_name=$(sed -n 's/^PROJECT_NAME := //p' Makefile)
 
 # Fetch the template
-TMP_DIR=$(mktemp -d)
+XFH_TMPDIR="${XFH_TMPDIR:-$HOME/tmp}"
+mkdir -p "$XFH_TMPDIR"
+TMP_DIR=$(mktemp -d "$XFH_TMPDIR/xfh-template.XXXXXX")
 cleanup() {
     rm -rf "$TMP_DIR"
 }
