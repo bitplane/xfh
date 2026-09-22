@@ -1,7 +1,7 @@
 [project]
 name = "xfh"
 description = "Recover Amiga XPK files, including files written through XFH"
-version = "0.3.0"
+version = "0.3.1"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "BSD-2-Clause"
