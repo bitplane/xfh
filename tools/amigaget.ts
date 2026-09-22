@@ -27,7 +27,7 @@ const walk = (dir: number, pre: string): void => {
     while (x > 0 && x < blocks && !seen.has(x) && hit === null) {
       const st = i32(x, 508), p = pre === '' ? nm(x, 432) : `${pre}/${nm(x, 432)}`
       if (st === 2) walk(x, p)
-      else { seen.add(x); if (p.toLowerCase() === want!.toLowerCase()) hit = x }
+      else { seen.add(x); if (st === -3 && p.toLowerCase() === want!.toLowerCase()) hit = x }
       x = u32(x, 496)
     }
   }
@@ -35,15 +35,17 @@ const walk = (dir: number, pre: string): void => {
 walk(Math.floor(blocks / 2), '')
 if (hit === null) { console.error('not found'); process.exit(1) }
 const size = u32(hit, 324)
+if (size > b.length) throw new Error("declared file size exceeds volume")
 const outBuf = Buffer.alloc(size)
 let pos = 0, blk: number = hit
 const chain = new Set<number>()
 while (blk > 0 && blk < blocks && !chain.has(blk)) {
   chain.add(blk)
   const high = u32(blk, 8)
+  if (high > 72) throw new Error("invalid data block count")
   for (let i = 0; i < high && pos < size; i++) {
     const d = u32(blk, 308 - i * 4)
-    if (d <= 0 || d >= blocks) continue
+    if (d <= 0 || d >= blocks) throw new Error("missing or invalid data block")
     const off = ffs ? 0 : 24
     const avail = ffs ? BS : Math.min(u32(d, 12), BS - 24)
     const n = Math.min(avail, size - pos)
@@ -52,5 +54,6 @@ while (blk > 0 && blk < blocks && !chain.has(blk)) {
   }
   blk = u32(blk, 504)
 }
+if (pos !== size) throw new Error(`incomplete extraction: recovered ${pos} of ${size} bytes`)
 writeFileSync(out!, outBuf)
 console.error(`${size} bytes -> ${out}`)
