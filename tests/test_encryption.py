@@ -102,3 +102,92 @@ def test_feal_passwords_and_cbc_framing(password):
     assert decode("FEAL", payload, len(plaintext), password=password) == plaintext
     with pytest.raises(IncorrectPasswordError):
         decode("FEAL", payload, len(plaintext), password=b"wrong")
+
+
+def test_idea_published_known_answer():
+    # Handbook of Applied Cryptography, example 7.108.
+    # https://cacr.uwaterloo.ca/hac/about/chap7.pdf
+    from xfh.codecs.crypt import _idea_block, _idea_expand, _idea_invert
+
+    key = _idea_expand(bytes.fromhex("00010002000300040005000600070008"))
+    plain = bytes.fromhex("0000000100020003")
+    cipher = bytes.fromhex("11fbed2b01986de5")
+    assert _idea_block(plain, key) == cipher
+    assert _idea_block(cipher, _idea_invert(key)) == plain
+
+
+def _idea_test_payload(plain, mode=0):
+    """Synthetic XPK framing; this is not evidence of an original Amiga roundtrip."""
+    from xfh.codecs.crypt import _idea_block, _idea_expand
+
+    key = _idea_expand(bytes.fromhex("00010002000300040005000600070008"))
+    padded = plain + bytes(-len(plain) % 8)
+    checksum = sum(int.from_bytes(padded[i : i + 2], "big") for i in range(0, len(padded), 2))
+    blocks = []
+    states = [bytes(8)] * 25
+    for index, offset in enumerate(range(0, len(padded), 8)):
+        block = padded[offset : offset + 8]
+        if mode <= 25:
+            encrypted = _idea_block(block, key)
+        else:
+            width = (mode - 1) % 25 + 1
+            slot = index % width
+            prior = states[slot]
+            if mode <= 75:
+                stream = _idea_block(prior, key)
+                encrypted = bytes(a ^ b for a, b in zip(block, stream, strict=True))
+                states[slot] = encrypted if mode <= 50 else stream
+            else:
+                mixed = bytes(a ^ b for a, b in zip(block, prior, strict=True))
+                encrypted = _idea_block(mixed, key)
+                states[slot] = encrypted
+        blocks.append(encrypted)
+    return (
+        mode.to_bytes(4, "big")
+        + len(plain).to_bytes(4, "big")
+        + (checksum & 0xFFFF).to_bytes(2, "big")
+        + b"".join(blocks)
+    )
+
+
+_IDEA_TEST_PASSWORD = b"#00010002000300040005000600070008"
+
+
+@pytest.mark.parametrize("mode", [0, 1, 25, 26, 50, 51, 75, 76, 100])
+def test_idea_synthetic_chaining_modes(mode):
+    plain = bytes(range(255)) * 2
+    payload = _idea_test_payload(plain, mode)
+    assert decode("IDEA", payload, len(plain), password=_IDEA_TEST_PASSWORD) == plain
+    with pytest.raises(IncorrectPasswordError):
+        decode("IDEA", payload, len(plain), password=b"wrong")
+
+
+@pytest.mark.parametrize(
+    ("codec", "fixture"), [("NUID", "nuke050-repeat1k.hex"), ("SHID", "shri100-repeat64k.hex")]
+)
+def test_idea_composites_with_synthetic_encryption(codec, fixture):
+    from tests.helpers import _xor8, xpkf
+    from xfh.container import parse
+    from xfh.limits import DEFAULT_LIMITS
+
+    original = bytes.fromhex((Path(__file__).parent / "fixtures/oracle" / fixture).read_text())
+    parsed = parse(original, DEFAULT_LIMITS)
+    chunks = [
+        (
+            chunk.info.type,
+            _idea_test_payload(chunk.payload) if chunk.info.type == 1 else chunk.payload,
+            chunk.info.unpacked_size,
+        )
+        for chunk in parsed.chunks
+        if chunk.info.type != 15
+    ]
+    packed = bytearray(xpkf(codec, chunks, long_headers=True))
+    packed[32] |= 2
+    packed[33] = 0
+    packed[33] = _xor8(packed[:36])
+    assert xfh.decompress(packed, password=_IDEA_TEST_PASSWORD) == xfh.decompress(original)
+    result = xfh.salvage(packed, password=_IDEA_TEST_PASSWORD)
+    assert result.complete
+    assert result.data == xfh.decompress(original)
+    with pytest.raises(IncorrectPasswordError):
+        xfh.decompress(packed, password=b"wrong")

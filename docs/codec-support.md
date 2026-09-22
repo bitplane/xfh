@@ -4,13 +4,22 @@
 
 | Evidence | Codecs |
 | --- | --- |
-| Original Amiga fixture | ACCA, BLFH, BLZW, BZP2, CBR0, DLTA, DUKE, ELZX, ENCO, FAST, FBR2, FEAL, FRLE, GZIP, HFMN, HUFF, IDEA, ILZR, IMPL, LHLB, LZBS, LZCB, LZW2, LZW3, LZW4, LZW5, MASH, NONE, NUID, NUKE, PPMQ, RAKE, RDCN, RLEN, SASC, SDHC, SHID, SHRI, SHSC, SLZ3, SLZX, SQSH, ZENO |
+| Original Amiga fixture | ACCA, BLFH, BLZW, BZP2, CBR0, DLTA, DUKE, ELZX, FAST, FBR2, FRLE, GZIP, HFMN, HUFF, ILZR, IMPL, LHLB, LZBS, LZCB, LZW2, LZW3, LZW4, LZW5, MASH, NONE, NUKE, PPMQ, RAKE, RDCN, RLEN, SASC, SDHC, SHRI, SHSC, SLZ3, SLZX, SQSH, ZENO |
 | Exact historical alias | CBR1, FRHT |
-| Independent or source-derived fixture | ARTM, CRM2, CRMS, CYB2, PWPK, SHR3, SMPL, TDCS |
+| Independent or source-derived fixture | ARTM, ENCO, FEAL, IDEA, NUID, SHID, CRM2, CRMS, CYB2, PWPK, SHR3, SMPL, TDCS |
 
-Original fixtures were packed and unpacked by preserved Amiga software under
-headless UAE, then decoded byte-exactly by `xfh`. The fixture manifest records
+The table describes evidence reproducible from the checked-in tests. Original
+fixtures were packed and unpacked by preserved Amiga software under headless
+UAE, then decoded byte-exactly by `xfh`. The public fixture manifest records
 their provenance, sizes, and hashes.
+
+FEAL and IDEA primitives are checked against published known-answer vectors.
+ENCO, FEAL, and IDEA wrapper tests use synthetic framing; NUID and SHID tests
+add synthetic IDEA encryption to original NUKE and SHRI fixtures, including
+SHRI continuation chunks. These tests do not establish original Amiga
+interoperability for the encryption wrappers. Original encrypted fixtures for
+ENCO, FEAL, IDEA, NUID, and SHID are not checked in; their earlier placement
+in the original-fixture row was not supported by the public manifest.
 
 `BLFH`, `ENCO`, `FEAL`, `IDEA`, `NUID`, and `SHID` require a password. BLFH
 supports packed and unpacked ECB, OFB, CFB, and CBC streams across modes 0–100.
