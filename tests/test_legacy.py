@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 import xfh
 from xfh.errors import CorruptDataError
 from xfh.models import FileFormat

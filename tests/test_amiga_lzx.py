@@ -2,6 +2,7 @@ from pathlib import Path
 from zlib import crc32
 
 import pytest
+
 from xfh.codecs import decode
 from xfh.codecs.amiga_lzx import decompress_archive
 from xfh.errors import CorruptDataError

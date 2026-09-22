@@ -1,7 +1,8 @@
 import pytest
-import xfh
 from hypothesis import given, settings
 from hypothesis import strategies as st
+
+import xfh
 from xfh.codecs import decode
 from xfh.errors import XfhError
 from xfh.limits import Limits

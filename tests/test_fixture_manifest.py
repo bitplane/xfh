@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 
 import pytest
-import xfh
 
+import xfh
 from tools.verify_fixture_manifest import verify_manifest
 
 

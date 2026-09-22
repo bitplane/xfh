@@ -3,6 +3,7 @@ import zlib
 from pathlib import Path
 
 import pytest
+
 import xfh
 from xfh.codecs import decode, supported_codecs
 from xfh.codecs._prefix import PrefixDecoder, variable_length

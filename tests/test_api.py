@@ -1,12 +1,12 @@
 from pathlib import Path
 
 import pytest
+
 import xfh
+from tests.helpers import xpkf
 from xfh.errors import CorruptDataError, InvalidFormatError, ResourceLimitError
 from xfh.limits import Limits
 from xfh.models import FileFormat
-
-from tests.helpers import xpkf
 
 
 def test_none_round_trip() -> None:

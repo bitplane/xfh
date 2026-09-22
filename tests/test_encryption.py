@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 import xfh
 from xfh.codecs import decode, supported_codecs
 from xfh.errors import IncorrectPasswordError, PasswordRequiredError
