@@ -73,3 +73,41 @@ def test_coverage_script_preserves_pytest_failure(tmp_path, status):
     )
     assert result.returncode == status
     assert "test output" in (tmp_path / "htmlcov/coverage_report.txt").read_text()
+
+
+@pytest.mark.parametrize("truncated", [False, True])
+def test_abk2png_is_portable_and_writes_valid_png(node, tmp_path, truncated):
+    import zlib
+
+    bank = b"AmSp" + struct.pack(">6H", 1, 1, 1, 1, 0, 0) + b"\x80\0"
+    bank += struct.pack(">32H", 0, 0xF00, *([0] * 30))
+    source = tmp_path / "sprites.abk"
+    source.write_bytes(bank[:-1] if truncated else bank)
+    prefix = tmp_path / "sprite"
+    result = subprocess.run(
+        [*node, str(ROOT / "tools/abk2png.ts"), str(source), str(prefix)],
+        cwd=tmp_path,
+        capture_output=True,
+        timeout=10,
+    )
+    target = tmp_path / "sprite0.png"
+    if truncated:
+        assert result.returncode != 0
+        assert not target.exists()
+        return
+    assert result.returncode == 0, result.stderr
+    data = target.read_bytes()
+    assert data[:8] == b"\x89PNG\r\n\x1a\n"
+    offset = 8
+    chunks = {}
+    while offset < len(data):
+        length = int.from_bytes(data[offset : offset + 4], "big")
+        kind = data[offset + 4 : offset + 8]
+        payload = data[offset + 8 : offset + 8 + length]
+        checksum = int.from_bytes(data[offset + 8 + length : offset + 12 + length], "big")
+        assert zlib.crc32(kind + payload) == checksum
+        chunks[kind] = payload
+        offset += length + 12
+    assert struct.unpack(">II", chunks[b"IHDR"][:8]) == (16, 1)
+    assert zlib.decompress(chunks[b"IDAT"]) == b"\0\xff\0\0" + bytes(45)
+    assert chunks[b"IEND"] == b""
