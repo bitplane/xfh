@@ -94,3 +94,14 @@ def test_atomic_output_explicit_overwrite(tmp_path):
     target.write_bytes(b"old")
     _write_atomic(target, b"new", overwrite=True)
     assert target.read_bytes() == b"new"
+
+
+def test_salvage_rejects_initial_plaintext_mismatch():
+    packed = xpkf("NONE", [(0, b"bad!", 4)], b"good")
+    with pytest.raises(CorruptDataError, match="initial bytes"):
+        xfh.decompress(packed)
+    result = xfh.salvage(packed)
+    assert result.data == b"bad!"
+    assert not result.complete
+    assert result.issues[0].offset == 16
+    assert "initial bytes" in result.issues[0].message

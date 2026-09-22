@@ -172,6 +172,12 @@ def salvage(
         except XfhError as error:
             issues.append(RecoveryIssue(chunk.info.offset, str(error)))
             break
+    if (
+        parsed.info.initial
+        and not parsed.info.flags & 2
+        and output[: len(parsed.info.initial)] != parsed.info.initial[: len(output)]
+    ):
+        issues.append(RecoveryIssue(16, "decompressed data does not match XPKF initial bytes"))
     complete = not issues and len(output) == parsed.info.unpacked_size
     return RecoveryResult(bytes(output), complete, tuple(issues))
 
